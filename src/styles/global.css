@@ -1,0 +1,56 @@
+@import "tailwindcss";
+@import "./prism.css";
+@import "./content-styles.css";
+@import "./emoji.css";
+@import "./code-blocks.css";
+
+/* 定义深色模式选择器 */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+  /* 主色调 - 使用更现代的蓝紫色 */
+  --color-primary-50: #f5f7ff;
+  --color-primary-100: #ebf0ff;
+  --color-primary-200: #d6e0ff;
+  --color-primary-300: #adc2ff;
+  --color-primary-400: #839dff;
+  --color-primary-500: #4b6bff;
+  --color-primary-600: #3451db;
+  --color-primary-700: #2541b7;
+  --color-primary-800: #1a3293;
+  --color-primary-900: #132878;
+  --color-primary-950: #0c1b5c;
+
+  /* 中性色调 */
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-950: #020617;
+
+  /* 深色模式颜色 */
+  --color-dark-bg: #0f172a;
+  --color-dark-surface: #1e293b;
+  --color-dark-card: #334155;
+  --color-dark-border: #475569;
+  --color-dark-text: #e2e8f0;
+  --color-dark-text-secondary: #94a3b8;
+}
+
+/* 深色模式样式 */
+[data-theme='dark'] {
+  --bg-primary: var(--color-dark-bg);
+  --bg-secondary: var(--color-dark-surface);
+  --text-primary: var(--color-dark-text);
+  --text-secondary: var(--color-dark-text-secondary);
+  --border-color: var(--color-dark-border);
+  
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}

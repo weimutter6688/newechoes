@@ -1,0 +1,253 @@
+/* 增强表格样式 */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.prose thead {
+  background-color: var(--color-secondary-50);
+}
+
+.prose thead th {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 2px solid var(--color-secondary-200);
+}
+
+.prose tbody tr {
+  border-bottom: 1px solid var(--color-secondary-200);
+}
+
+.prose tbody tr:last-child {
+  border-bottom: none;
+}
+
+.prose tbody td {
+  padding: 0.75rem 1rem;
+  vertical-align: top;
+}
+
+.prose tbody tr:nth-child(even) {
+  background-color: var(--color-secondary-50);
+}
+
+/* 增强列表样式 */
+.prose ul {
+  list-style-type: disc;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose ul li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 0.375em;
+}
+
+.prose ul li::marker {
+  color: #6b7280;
+}
+
+.prose ul li ul {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose ol li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 0.375em;
+}
+
+.prose ol li::marker {
+  color: #6b7280;
+}
+
+/* 增强代码块样式 */
+.prose pre {
+  margin: 1.5em 0;
+  padding: 1em;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+}
+
+.prose :not(pre) > code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* 移除 Tailwind Typography 添加的引号 */
+.prose code::before,
+.prose code::after {
+  content: none !important;
+}
+
+/* 表情符号样式 */
+.prose img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.05em 0 0.1em;
+  vertical-align: -0.1em;
+  display: inline-block;
+  border: none;
+  box-shadow: none;
+}
+
+/* 标题样式 */
+.prose h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-secondary-900);
+  border-bottom: 1px solid var(--color-secondary-200);
+  padding-bottom: 0.5rem;
+  position: relative;
+}
+
+.prose h1::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(to right, var(--color-primary-600), var(--color-primary-400));
+  border-radius: 3px;
+}
+
+.prose h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 1.25rem;
+  color: var(--color-secondary-900);
+  border-bottom: 1px solid var(--color-secondary-200);
+  padding-bottom: 0.25rem;
+  position: relative;
+}
+
+.prose h2::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 75px;
+  height: 2px;
+  background: linear-gradient(to right, var(--color-primary-500), var(--color-primary-300));
+  border-radius: 2px;
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.75rem;
+  margin-bottom: 1rem;
+  color: var(--color-secondary-900);
+  position: relative;
+  padding-left: 1rem;
+}
+
+.prose h3::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  height: 1em;
+  width: 4px;
+  background: linear-gradient(to bottom, var(--color-primary-500), var(--color-primary-300));
+  border-radius: 2px;
+}
+
+.prose h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-secondary-900);
+}
+
+.prose h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-secondary-900);
+}
+
+.prose h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-secondary-700);
+}
+
+/* 标题锚点样式 */
+.prose h1 .anchor,
+.prose h2 .anchor,
+.prose h3 .anchor,
+.prose h4 .anchor,
+.prose h5 .anchor,
+.prose h6 .anchor {
+  visibility: hidden;
+  margin-left: 0.5rem;
+  color: #a0aec0;
+  text-decoration: none;
+}
+
+.prose h1:hover .anchor,
+.prose h2:hover .anchor,
+.prose h3:hover .anchor,
+.prose h4:hover .anchor,
+.prose h5:hover .anchor,
+.prose h6:hover .anchor {
+  visibility: visible;
+}
+
+/* 暗色模式 */
+[data-theme="dark"] .prose {
+  color: var(--color-secondary-300);
+}
+
+[data-theme="dark"] .prose h1,
+[data-theme="dark"] .prose h2,
+[data-theme="dark"] .prose h3,
+[data-theme="dark"] .prose h4,
+[data-theme="dark"] .prose h5 {
+  color: var(--color-secondary-100);
+}
+
+[data-theme="dark"] .prose h6 {
+  color: var(--color-secondary-300);
+}
+
+[data-theme="dark"] .prose thead {
+  background-color: var(--color-dark-card);
+}
+
+[data-theme="dark"] .prose tbody tr:nth-child(even) {
+  background-color: var(--color-dark-card);
+}
+
+[data-theme="dark"] .prose thead th,
+[data-theme="dark"] .prose tbody tr {
+  border-color: var(--color-dark-border);
+} 

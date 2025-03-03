@@ -1,0 +1,155 @@
+---
+interface Props {
+  type: 'movie' | 'book';
+  title: string;
+}
+
+const { type, title } = Astro.props;
+---
+
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-6">{title}</h1>
+  
+  <div id="media-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <!-- 内容将通过JS动态加载 -->
+  </div>
+  
+  <div id="loading" class="text-center py-8">
+    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+    <p class="mt-2 text-gray-600">加载更多...</p>
+  </div>
+  
+  <div id="end-message" class="text-center py-8 hidden">
+    <p class="text-gray-600">已加载全部内容</p>
+  </div>
+</div>
+
+<script is:inline define:vars={{ type }}>
+
+  let currentPage = 1;
+  let isLoading = false;
+  let hasMoreContent = true;
+  const itemsPerPage = 15; // 豆瓣每页显示的数量
+
+  async function fetchMedia(page = 1, append = false) {
+    if (isLoading || (!append && !hasMoreContent)) {
+      return;
+    }
+    
+    isLoading = true;
+    showLoading(true);
+    
+    const start = (page - 1) * itemsPerPage;
+    try {
+      const response = await fetch(`/api/douban?type=${type}&start=${start}`);
+      if (!response.ok) {
+        throw new Error(`获取${type === 'movie' ? '电影' : '图书'}数据失败`);
+      }
+      
+      const data = await response.json();
+      renderMedia(data.items, append);
+      
+      // 更新分页状态
+      currentPage = data.pagination.current;
+      hasMoreContent = data.pagination.hasNext;
+      
+      if (!hasMoreContent) {
+        showEndMessage(true);
+      }
+    } catch (error) {
+      const mediaList = document.getElementById('media-list');
+      if (mediaList && !append) {
+        mediaList.innerHTML = '<div class="col-span-full text-center text-red-500">获取数据失败，请稍后再试</div>';
+      }
+    } finally {
+      isLoading = false;
+      showLoading(false);
+    }
+  }
+
+  function renderMedia(items, append = false) {
+    const mediaList = document.getElementById('media-list');
+    if (!mediaList) return;
+    
+    if (!items || items.length === 0) {
+      if (!append) {
+        mediaList.innerHTML = `<div class="col-span-full text-center">暂无${type === 'movie' ? '电影' : '图书'}数据</div>`;
+      }
+      return;
+    }
+
+    const mediaHTML = items.map(item => `
+      <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
+        <div class="relative pb-[150%] overflow-hidden">
+          <img src="${item.imageUrl}" alt="${item.title}" class="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+          <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+            <h3 class="font-bold text-white text-sm line-clamp-2">
+              <a href="${item.link}" target="_blank" class="hover:text-blue-300 transition-colors">${item.title}</a>
+            </h3>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    if (append) {
+      mediaList.innerHTML += mediaHTML;
+    } else {
+      mediaList.innerHTML = mediaHTML;
+    }
+  }
+
+  function showLoading(show) {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      if (show) {
+        loading.innerHTML = `
+          <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+          <p class="mt-2 text-gray-600">加载更多...</p>
+        `;
+      } else {
+        loading.innerHTML = `<div class="h-8"></div>`; // 保持元素可见但内容为空
+      }
+    }
+  }
+
+  function showEndMessage(show) {
+    const endMessage = document.getElementById('end-message');
+    if (endMessage) {
+      endMessage.classList.toggle('hidden', !show);
+    }
+  }
+
+  function setupInfiniteScroll() {
+    // 直接使用滚动事件
+    window.addEventListener('scroll', handleScroll);
+    
+    // 初始检查一次，以防内容不足一屏
+    setTimeout(() => {
+      handleScroll();
+    }, 500);
+  }
+
+  function handleScroll() {
+    if (isLoading || !hasMoreContent) {
+      return;
+    }
+    
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    // 当滚动到距离底部300px时加载更多
+    if (scrollY + windowHeight >= documentHeight - 300) {
+      fetchMedia(currentPage + 1, true);
+    }
+  }
+
+  // 初始加载
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchMedia(1, false).then(() => {
+      setupInfiniteScroll();
+    }).catch(err => {
+      // 错误已在fetchMedia中处理
+    });
+  });
+</script> 

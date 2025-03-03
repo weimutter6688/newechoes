@@ -1,0 +1,177 @@
+---
+interface Props {
+  title?: string;
+  itemsPerPage?: number;
+}
+
+const { 
+  title = "文章时间线", 
+  itemsPerPage = 10 
+} = Astro.props;
+---
+
+<div class="container mx-auto px-4 py-8">
+  {title && <h1 class="text-3xl font-bold mb-6 text-primary-900 dark:text-primary-100">{title}</h1>}
+  
+  <div id="article-timeline" class="space-y-6">
+    <!-- 内容将通过JS动态加载 -->
+  </div>
+  
+  <div id="loading" class="text-center py-8">
+    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-500 dark:border-primary-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+    <p class="mt-2 text-secondary-600 dark:text-secondary-400">加载更多...</p>
+  </div>
+  
+  <div id="end-message" class="text-center py-8 hidden">
+    <p class="text-secondary-600 dark:text-secondary-400">已加载全部内容</p>
+  </div>
+</div>
+
+<script is:inline define:vars={{ itemsPerPage }}>
+  let currentPage = 1;
+  let isLoading = false;
+  let hasMoreContent = true;
+
+  async function fetchArticles(page = 1, append = false) {
+    if (isLoading || (!append && !hasMoreContent)) {
+      return;
+    }
+    
+    isLoading = true;
+    showLoading(true);
+    
+    try {
+      const response = await fetch(`/api/articles?page=${page}&limit=${itemsPerPage}`);
+      if (!response.ok) {
+        throw new Error('获取文章数据失败');
+      }
+      
+      const data = await response.json();
+      renderArticles(data.articles, append);
+      
+      // 更新分页状态
+      currentPage = data.pagination.current;
+      hasMoreContent = data.pagination.hasNext;
+      
+      if (!hasMoreContent) {
+        showEndMessage(true);
+      }
+    } catch (error) {
+      const articleTimeline = document.getElementById('article-timeline');
+      if (articleTimeline && !append) {
+        articleTimeline.innerHTML = '<div class="text-center text-red-500 py-4">获取数据失败，请稍后再试</div>';
+      }
+    } finally {
+      isLoading = false;
+      showLoading(false);
+    }
+  }
+
+  function renderArticles(articles, append = false) {
+    const articleTimeline = document.getElementById('article-timeline');
+    if (!articleTimeline) return;
+    
+    if (!articles || articles.length === 0) {
+      if (!append) {
+        articleTimeline.innerHTML = '<div class="text-center py-4 text-secondary-600 dark:text-secondary-400">暂无文章数据</div>';
+      }
+      return;
+    }
+
+    const articlesHTML = articles.map(article => `
+      <div class="bg-white dark:bg-dark-card rounded-xl shadow-sm hover:shadow-md overflow-hidden border border-secondary-200 dark:border-dark-border transition-all duration-300">
+        <a href="/articles/${article.id}" class="block p-6 no-underline text-inherit">
+          <div class="flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-primary-800 dark:text-primary-200 mb-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">${article.title}</h3>
+              <div class="flex items-center text-sm text-secondary-500 dark:text-secondary-400 mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <time datetime="${article.date}">${new Date(article.date).toLocaleDateString('zh-CN')}</time>
+                
+                ${article.section ? `
+                <span class="mx-2 text-secondary-300 dark:text-secondary-600">•</span>
+                <span class="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  ${article.section}
+                </span>
+                ` : ''}
+              </div>
+              
+              ${article.summary ? `<p class="text-secondary-600 dark:text-secondary-300 line-clamp-2 mb-3">${article.summary}</p>` : ''}
+              
+              ${article.tags && article.tags.length > 0 ? `
+              <div class="flex flex-wrap gap-2">
+                ${article.tags.map(tag => `
+                  <span class="text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 py-1 px-2 rounded-full">
+                    #${tag}
+                  </span>
+                `).join('')}
+              </div>
+              ` : ''}
+            </div>
+            
+            <div class="text-primary-500 dark:text-primary-400 hidden md:block">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </div>
+          </div>
+        </a>
+      </div>
+    `).join('');
+
+    if (append) {
+      articleTimeline.innerHTML += articlesHTML;
+    } else {
+      articleTimeline.innerHTML = articlesHTML;
+    }
+  }
+
+  function showLoading(show) {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.toggle('hidden', !show);
+    }
+  }
+
+  function showEndMessage(show) {
+    const endMessage = document.getElementById('end-message');
+    if (endMessage) {
+      endMessage.classList.toggle('hidden', !show);
+    }
+  }
+
+  function setupInfiniteScroll() {
+    window.addEventListener('scroll', handleScroll);
+    
+    setTimeout(() => {
+      handleScroll();
+    }, 500);
+  }
+
+  function handleScroll() {
+    if (isLoading || !hasMoreContent) {
+      return;
+    }
+    
+    const scrollY = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    if (scrollY + windowHeight >= documentHeight - 300) {
+      fetchArticles(currentPage + 1, true);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchArticles(1, false).then(() => {
+      setupInfiniteScroll();
+    }).catch(err => {
+      // 错误已在fetchArticles中处理
+    });
+  });
+</script> 

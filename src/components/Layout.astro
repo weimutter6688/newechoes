@@ -1,0 +1,34 @@
+---
+import "@/styles/global.css";
+import Header from "@/components/header.astro";
+---
+<!doctype html>
+<html lang="en" class="m-0 w-full h-full">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="referrer" content="no-referrer" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>New Echoes</title>
+		<script is:inline>
+			// 立即执行主题初始化
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+			document.documentElement.dataset.theme = theme;
+		</script>
+	</head>
+	<body class="m-0 w-full h-full bg-white dark:bg-dark-bg transition-colors duration-300">
+		<Header />
+		<main class="pt-16">
+			<slot />
+		</main>
+	</body>
+</html>

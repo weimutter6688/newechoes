@@ -1,0 +1,58 @@
+---
+import { SITE_NAME, NAV_LINKS } from '@/consts.ts';
+import { ThemeToggle } from './ThemeToggle';
+
+// 获取当前路径
+const currentPath = Astro.url.pathname;
+
+// 移除结尾的斜杠以统一路径格式
+const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
+
+// 定义导航链接
+
+---
+<header class="fixed w-full top-0 z-50 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-secondary-200 dark:border-dark-border">
+    <nav>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo 部分 -->
+                <div class="flex items-center">
+                    <a href="/" class="text-lg font-semibold text-primary-900 dark:text-primary-100 hover:text-primary-600 dark:hover:text-primary-400">
+                        {SITE_NAME}
+                    </a>
+                </div>
+
+                <!-- 导航链接 -->
+                <div class="hidden md:flex md:items-center md:space-x-8">
+                    {NAV_LINKS.map(link => (
+                        <a
+                            href={link.href}
+                            class:list={[
+                                'inline-flex items-center px-1 pt-1 text-sm font-medium',
+                                normalizedPath === (link.href === '/' ? '' : link.href)
+                                    ? 'text-primary-600 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-400'
+                                    : 'text-secondary-600 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 hover:border-b-2 hover:border-primary-300 dark:hover:border-primary-700'
+                            ]}
+                        >
+                            {link.text}
+                        </a>
+                    ))}
+                    <ThemeToggle client:load />
+                </div>
+
+                <!-- 移动端菜单按钮 -->
+                <div class="flex items-center md:hidden">
+                    <button 
+                        type="button" 
+                        class="inline-flex items-center justify-center p-2 rounded-md text-secondary-400 dark:text-secondary-500 hover:text-secondary-500 dark:hover:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-dark-card focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                    >
+                        <span class="sr-only">打开菜单</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>

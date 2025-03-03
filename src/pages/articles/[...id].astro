@@ -1,0 +1,322 @@
+---
+import { getCollection, render } from 'astro:content';
+import { contentStructure, getRelativePath, getBasename, getDirPath } from '../../content.config';
+import type { SectionStructure } from '../../content.config';
+import Layout from '../../components/Layout.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
+
+// 添加这一行，告诉Astro预渲染这个页面
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  
+  // 为每篇文章添加section信息
+  const articlesWithSections = articles.map(article => {
+    // 查找文章所属的目录
+    let section = '';
+    const findSection = (sections: SectionStructure[], articleId: string, parentPath = ''): string | null => {
+      for (const sec of sections) {
+        const sectionPath = parentPath ? `${parentPath}/${sec.name}` : sec.name;
+        
+        // 检查文章是否在当前目录中
+        for (const artPath of sec.articles) {
+          const artId = getRelativePath(artPath);
+          const basename = getBasename(artPath);
+          const dirPath = getDirPath(artPath);
+          
+          // 尝试多种可能的ID格式
+          const possibleIds = [
+            artId,                  // 完整相对路径
+            `${sectionPath}/${basename}`, // 目录路径/文件名
+            basename,               // 仅文件名
+            dirPath ? `${dirPath}/${basename}` : basename, // 目录路径/文件名
+            `articles/${artId}`,    // 添加集合名称前缀
+            `articles/${sectionPath}/${basename}` // 添加集合名称前缀和目录路径
+          ];
+          
+          // 精确匹配
+          if (possibleIds.includes(articleId)) {
+            return sectionPath;
+          }
+          
+          // 检查文章ID是否以某个可能的ID结尾
+          for (const possibleId of possibleIds) {
+            if (articleId.endsWith(possibleId)) {
+              return sectionPath;
+            }
+          }
+        }
+        
+        // 递归检查子目录
+        const foundInSubsection = findSection(sec.sections, articleId, sectionPath);
+        if (foundInSubsection) {
+          return foundInSubsection;
+        }
+      }
+      
+      return null;
+    };
+    
+    section = findSection(contentStructure.sections, article.id) || '';
+    
+    return {
+      ...article,
+      section
+    };
+  });
+  
+  return articlesWithSections.map(article => {
+    return {
+      params: { id: article.id },
+      props: { article, section: article.section }
+    };
+  });
+}
+
+// 获取文章内容
+const { article, section } = Astro.props;
+
+// 渲染文章内容
+const { Content } = await render(article);
+
+// 获取面包屑导航
+const breadcrumbs = section ? section.split('/') : [];
+
+// 获取相关文章
+const allArticles = await getCollection('articles');
+const relatedArticles = allArticles
+  .filter(a => a.id !== article.id && (
+    (a.data.tags && article.data.tags && a.data.tags.some(tag => article.data.tags?.includes(tag)))
+  ))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<Layout>
+  <div class="bg-gradient-to-b from-primary-50 dark:from-dark-surface to-white dark:to-dark-bg min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+      <!-- 阅读进度条 -->
+      <div class="fixed top-0 left-0 w-full h-1 bg-transparent z-50" id="progress-container">
+        <div class="h-full w-0 bg-primary-500 transition-width duration-100" id="progress-bar"></div>
+      </div>
+      
+      <!-- 文章头部 -->
+      <header class="mb-8">
+        <!-- 导航区域 -->
+        <div class="bg-white dark:bg-dark-card rounded-xl p-4 mb-6">
+          <div class="flex items-center justify-between">
+            <Breadcrumb 
+              pageType="article" 
+              pathSegments={breadcrumbs} 
+              articleTitle={article.data.title} 
+            />
+            
+            {/* 返回按钮 */}
+            <a href="/articles" class="text-secondary-500 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              返回文章列表
+            </a>
+          </div>
+        </div>
+        
+        <h1 class="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">{article.data.title}</h1>
+        
+        <div class="flex flex-wrap items-center gap-4 text-sm text-secondary-600 dark:text-secondary-400 mb-4">
+          <time datetime={article.data.date.toISOString()} class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {article.data.date.toLocaleDateString('zh-CN')}
+          </time>
+          
+          {/* 显示文章所在目录 */}
+          {section && (
+            <span class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+              <a href={`/articles?path=${encodeURIComponent(section)}`} class="hover:text-indigo-600 transition-colors">
+                {section}
+              </a>
+            </span>
+          )}
+        </div>
+        
+        {article.data.tags && article.data.tags.length > 0 && (
+          <div class="flex flex-wrap gap-2 mb-6">
+            {article.data.tags.map(tag => (
+              <a href={`/articles?tag=${tag}`} class="text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 py-1 px-2 rounded hover:bg-primary-100 dark:hover:bg-primary-800/30 transition-colors">
+                #{tag}
+              </a>
+            ))}
+          </div>
+        )}
+        
+        {article.data.summary && (
+          <div class="bg-primary-50 dark:bg-primary-900/30 p-4 rounded-lg mb-6 text-secondary-700 dark:text-secondary-300 italic">
+            {article.data.summary}
+          </div>
+        )}
+      </header>
+      
+      <!-- 文章内容 -->
+      <article class="prose prose-lg dark:prose-invert prose-primary prose-table:rounded-lg prose-thead:bg-secondary-50 dark:prose-thead:bg-dark-card prose-ul:list-disc prose-ol:list-decimal prose-li:my-1 max-w-none mb-12 bg-white dark:bg-dark-card p-8 rounded-xl">
+        <Content />
+      </article>
+      
+      <!-- 相关文章 -->
+      {relatedArticles.length > 0 && (
+        <div class="mt-12 pt-8 border-t border-secondary-200 dark:border-dark-border">
+          <h2 class="text-2xl font-bold mb-6 text-primary-900 dark:text-primary-100">相关文章</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {relatedArticles.map(relatedArticle => (
+              <a href={`/articles/${relatedArticle.id}`} class="block p-4 border border-primary-100 dark:border-dark-border rounded-lg bg-white dark:bg-dark-card hover:shadow-md transition-shadow">
+                <h3 class="font-bold text-lg mb-2 line-clamp-2 text-gray-800 dark:text-gray-200 hover:text-primary-700 dark:hover:text-primary-400">{relatedArticle.data.title}</h3>
+                <p class="text-sm text-secondary-600 dark:text-secondary-400 mb-2">{relatedArticle.data.date.toLocaleDateString('zh-CN')}</p>
+                {relatedArticle.data.summary && (
+                  <p class="text-sm text-secondary-700 dark:text-secondary-300 line-clamp-3">{relatedArticle.data.summary}</p>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      <!-- 返回顶部按钮 -->
+      <button id="back-to-top" class="fixed bottom-8 right-8 w-12 h-12 rounded-full bg-primary-500 dark:bg-primary-600 text-white shadow-md flex items-center justify-center opacity-0 invisible translate-y-5 transition-all duration-300 hover:bg-primary-600 dark:hover:bg-primary-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // 阅读进度条
+  const progressBar = document.getElementById('progress-bar');
+  const backToTopButton = document.getElementById('back-to-top');
+  
+  function updateReadingProgress() {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const progress = (scrollTop / scrollHeight) * 100;
+    
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
+    }
+    
+    // 显示/隐藏返回顶部按钮
+    if (backToTopButton) {
+      if (scrollTop > 300) {
+        backToTopButton.classList.add('opacity-100', 'visible', 'translate-y-0');
+        backToTopButton.classList.remove('opacity-0', 'invisible', 'translate-y-5');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'invisible', 'translate-y-5');
+        backToTopButton.classList.remove('opacity-100', 'visible', 'translate-y-0');
+      }
+    }
+  }
+  
+  // 返回顶部功能
+  if (backToTopButton) {
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // 监听滚动事件
+  window.addEventListener('scroll', updateReadingProgress);
+  
+  // 初始化
+  updateReadingProgress();
+  
+  // 代码块增强功能
+  document.addEventListener('DOMContentLoaded', () => {
+    // 处理所有代码块
+    const codeBlocks = document.querySelectorAll('pre');
+    
+    codeBlocks.forEach(pre => {
+      // 获取代码语言
+      const code = pre.querySelector('code');
+      if (!code) return;
+      
+      // 从类名中提取语言
+      const className = code.className;
+      const languageMatch = className.match(/language-(\w+)/);
+      const language = languageMatch ? languageMatch[1] : 'text';
+      
+      // 创建顶部栏
+      const header = document.createElement('div');
+      header.className = 'code-header flex justify-between items-center text-xs px-4 py-2 bg-secondary-800 dark:bg-dark-card text-secondary-300 dark:text-secondary-400 rounded-t-lg';
+      
+      // 创建语言标签
+      const languageLabel = document.createElement('span');
+      languageLabel.className = 'code-language font-mono';
+      languageLabel.textContent = language;
+      
+      // 创建复制按钮
+      const copyButton = document.createElement('button');
+      copyButton.className = 'code-copy-button flex items-center gap-1 hover:text-white dark:hover:text-primary-400 transition-colors';
+      
+      // 创建SVG图标和文本
+      const copyIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+      const successIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M20 6L9 17l-5-5"></path></svg>`;
+      const errorIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+      
+      copyButton.innerHTML = `${copyIcon}<span>复制</span>`;
+      copyButton.setAttribute('aria-label', '复制代码');
+      copyButton.setAttribute('title', '复制代码到剪贴板');
+      
+      // 添加复制功能
+      copyButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // 获取代码文本
+        const codeText = code.textContent || '';
+        
+        // 复制到剪贴板
+        navigator.clipboard.writeText(codeText)
+          .then(() => {
+            // 复制成功，更改按钮文本
+            copyButton.innerHTML = `${successIcon}<span>已复制</span>`;
+            copyButton.classList.add('text-green-400');
+            
+            // 2秒后恢复按钮文本
+            setTimeout(() => {
+              copyButton.innerHTML = `${copyIcon}<span>复制</span>`;
+              copyButton.classList.remove('text-green-400');
+            }, 2000);
+          })
+          .catch(() => {
+            // 复制失败，更改按钮文本
+            copyButton.innerHTML = `${errorIcon}<span>失败</span>`;
+            copyButton.classList.add('text-red-400');
+            
+            // 2秒后恢复按钮文本
+            setTimeout(() => {
+              copyButton.innerHTML = `${copyIcon}<span>复制</span>`;
+              copyButton.classList.remove('text-red-400');
+            }, 2000);
+          });
+      });
+      
+      // 将语言标签和复制按钮添加到顶部栏
+      header.appendChild(languageLabel);
+      header.appendChild(copyButton);
+      
+      // 将顶部栏插入到代码块的最前面
+      pre.insertBefore(header, pre.firstChild);
+      
+      // 调整代码块样式
+      pre.classList.add('rounded-b-lg', 'mt-0');
+      pre.style.marginTop = '0';
+    });
+  });
+</script> 
