@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
-import { contentStructure, getRelativePath, getBasename, getDirPath } from '../../content.config';
+import { contentStructure, getRelativePath, getBasename, getDirPath, getSpecialPath } from '../../content.config';
 import Layout from '@/components/Layout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ArticleTimeline from '@/components/ArticleTimeline.astro';
@@ -110,6 +110,10 @@ interface Breadcrumb {
   path: string;
 }
 
+// 处理特殊ID的函数
+function getArticleUrl(articleId: string) {
+  return `/articles/${getSpecialPath(articleId)}`;
+}
 
 ---
 
@@ -229,7 +233,7 @@ interface Breadcrumb {
             {tagFilter ? (
               // 显示标签过滤后的文章
               filteredArticles.map(article => (
-                <a href={`/articles/${article.id}`} 
+                <a href={getArticleUrl(article.id)} 
                    class="group flex flex-col h-full p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
                   <div class="flex items-start">
                     <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200 transition-colors">
@@ -328,7 +332,7 @@ interface Breadcrumb {
                 }
                 
                 return (
-                  <a href={`/articles/${article.id}`} 
+                  <a href={getArticleUrl(article.id)} 
                      class="group flex flex-col h-full p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
                     <div class="flex items-start">
                       <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200 transition-colors">

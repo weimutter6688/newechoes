@@ -7,7 +7,7 @@ export const NAV_LINKS = [
     { href: '/movies', text: '观影' },
     { href: '/books', text: '读书' },
     { href: '/projects', text: '项目' },
-    { href: '/about', text: '关于' }
+    { href: '/other', text: '其他' }
 ];
 
 export const ICP = '渝ICP备2022009272号';

@@ -68,6 +68,43 @@ export function getDirPath(filePath: string, basePath = './src/content'): string
   return dirPath;
 }
 
+// 辅助函数：获取原始文件路径（移除特殊前缀）
+export function getOriginalPath(specialPath: string): string {
+  // 检查路径是否包含特殊前缀
+  const parts = specialPath.split('/');
+  const fileName = parts[parts.length - 1];
+  
+  // 如果文件名以下划线开头，移除它
+  if (fileName.startsWith('_')) {
+    const originalFileName = fileName.substring(1);
+    const newParts = [...parts.slice(0, -1), originalFileName];
+    return newParts.join('/');
+  }
+  
+  return specialPath;
+}
+
+// 辅助函数：获取特殊文件路径（添加特殊前缀）
+export function getSpecialPath(originalPath: string): string {
+  // 检查文件名是否与其所在目录名相同或包含目录名
+  const parts = originalPath.split('/');
+  const fileName = parts[parts.length - 1].replace(/\.md$/, '');
+  
+  // 如果文件名与目录名相同或以目录名开头，则在文件名前添加特殊前缀
+  if (parts.length > 1) {
+    const dirName = parts[parts.length - 2];
+    if (fileName === dirName || fileName.startsWith(dirName)) {
+      // 创建一个新的路径，在文件名前添加下划线前缀
+      const newFileName = fileName.startsWith('_') ? fileName : `_${fileName}`;
+      const fileExt = originalPath.endsWith('.md') ? '.md' : '';
+      const newParts = [...parts.slice(0, -1), newFileName + fileExt];
+      return newParts.join('/');
+    }
+  }
+  
+  return originalPath;
+}
+
 // 3. 定义目录结构处理函数
 function getContentStructure(contentDir = './src/content', basePath = './src/content'): ContentStructure {
   // 检查目录是否存在
@@ -83,8 +120,25 @@ function getContentStructure(contentDir = './src/content', basePath = './src/con
     .map(item => {
       // 生成相对于content目录的路径，用于在页面中查找文章
       const fullPath = path.join(contentDir, item.name);
-      // 将路径转换为相对于content目录的格式
-      return fullPath.replace(/\\/g, '/');
+      // 将路径转换为相对于content目录的格式，并移除basePath
+      const relativePath = fullPath.replace(basePath, '').replace(/^[\/\\]/, '');
+      
+      // 检查文件名是否与其所在目录名相同或包含目录名
+      const pathParts = relativePath.split(/[\/\\]/);
+      const fileName = pathParts[pathParts.length - 1].replace(/\.md$/, '');
+      
+      // 如果文件名与目录名相同或以目录名开头，则在文件名前添加特殊前缀
+      if (pathParts.length > 1) {
+        const dirName = pathParts[pathParts.length - 2];
+        if (fileName === dirName || fileName.startsWith(dirName)) {
+          // 创建一个新的路径，在文件名前添加下划线前缀
+          const newFileName = `_${fileName}.md`;
+          const newPathParts = [...pathParts.slice(0, -1), newFileName];
+          return newPathParts.join('/');
+        }
+      }
+      
+      return relativePath.replace(/\\/g, '/');
     });
   
   // 获取子目录（作为章节）
@@ -95,8 +149,9 @@ function getContentStructure(contentDir = './src/content', basePath = './src/con
       // 递归获取子目录的结构
       const sectionContent: ContentStructure = getContentStructure(sectionPath, basePath);
       
-      // 确保路径格式正确
-      const normalizedPath = sectionPath.replace(/\\/g, '/');
+      // 确保路径格式正确，并移除basePath
+      const relativePath = sectionPath.replace(basePath, '').replace(/^[\/\\]/, '');
+      const normalizedPath = relativePath.replace(/\\/g, '/');
       
       return {
         name: item.name,
@@ -112,7 +167,10 @@ function getContentStructure(contentDir = './src/content', basePath = './src/con
 // 4. 定义你的集合
 const articles = defineCollection({
   // 使用glob加载器从content目录加载所有markdown文件
-  loader: glob({ pattern: "**/*.md", base: "./src/content" }),
+  loader: glob({ 
+    pattern: "**/*.md", 
+    base: "./src/content"
+  }),
   schema: z.object({
     title: z.string(),
     date: z.date(),
@@ -128,21 +186,8 @@ const articles = defineCollection({
   }),
 });
 
-// 5. 定义目录集合
-const sections = defineCollection({
-  type: 'data',
-  schema: z.object({
-    name: z.string(),
-    title: z.string().optional(),
-    description: z.string().optional(),
-    weight: z.number().optional(),
-    articles: z.array(z.string()).optional(),
-    subsections: z.array(z.string()).optional(),
-  }),
-});
-
 // 6. 导出一个 `collections` 对象来注册你的集合
-export const collections = { articles, sections };
+export const collections = { articles };
 
 // 7. 导出内容结构，可以在构建时使用
 export const contentStructure = getContentStructure();

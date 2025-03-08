@@ -37,7 +37,26 @@ export default defineConfig({
     format: 'directory'
   },
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          // 手动分块配置
+          manualChunks: {
+            // 将地图组件单独打包
+            'world-heatmap': ['./src/components/WorldHeatmap.tsx'],
+            // 将 React 相关库单独打包
+            'react-vendor': ['react', 'react-dom'],
+            // 其他大型依赖也可以单独打包
+            'chart-vendor': ['chart.js'],
+            // 将其他组件打包到一起
+            'components': ['./src/components']
+          }
+        }
+      },
+      // 提高警告阈值，避免不必要的警告
+      chunkSizeWarningLimit: 1000
+    }
   },
 
   integrations: [

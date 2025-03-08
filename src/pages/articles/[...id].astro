@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { contentStructure, getRelativePath, getBasename, getDirPath } from '@/content.config';
+import { contentStructure, getRelativePath, getBasename, getDirPath, getOriginalPath, getSpecialPath } from '@/content.config';
 import type { SectionStructure } from '@/content.config';
 import Layout from '@/components/Layout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
@@ -66,19 +66,30 @@ export async function getStaticPaths() {
     };
   });
   
+  // 为每篇文章生成路由参数
   return articlesWithSections.map(article => {
+    // 检查文章ID是否需要特殊处理
+    const specialId = getSpecialPath(article.id);
+    
     return {
-      params: { id: article.id },
-      props: { article, section: article.section }
+      params: { id: specialId },
+      props: { 
+        article, 
+        section: article.section,
+        originalId: specialId !== article.id ? article.id : undefined
+      }
     };
   });
 }
 
 // 获取文章内容
-const { article, section } = Astro.props;
+const { article, section, originalId } = Astro.props;
+
+// 如果有原始ID，使用它来渲染内容
+const articleToRender = originalId ? { ...article, id: originalId } : article;
 
 // 渲染文章内容
-const { Content } = await render(article);
+const { Content } = await render(articleToRender);
 
 // 获取面包屑导航
 const breadcrumbs = section ? section.split('/') : [];
@@ -94,6 +105,11 @@ const relatedArticles = allArticles
 
 // 准备文章描述
 const description = article.data.summary || `${article.data.title} - 发布于 ${article.data.date.toLocaleDateString('zh-CN')}`;
+
+// 处理特殊ID的函数
+function getArticleUrl(articleId: string) {
+  return `/articles/${getSpecialPath(articleId)}`;
+}
 ---
 
 <Layout
@@ -193,7 +209,7 @@ const description = article.data.summary || `${article.data.title} - 发布于 $
         <h2 class="text-2xl font-bold mb-6 text-primary-900 dark:text-primary-100">相关文章</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           {relatedArticles.map(relatedArticle => (
-            <a href={`/articles/${relatedArticle.id}`} class="block p-5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
+            <a href={getArticleUrl(relatedArticle.id)} class="block p-5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
               <h3 class="font-bold text-lg mb-2 line-clamp-2 text-gray-800 dark:text-gray-200 hover:text-primary-700 dark:hover:text-primary-400">{relatedArticle.data.title}</h3>
               <p class="text-sm text-secondary-600 dark:text-secondary-400 mb-2">{relatedArticle.data.date.toLocaleDateString('zh-CN')}</p>
               {relatedArticle.data.summary && (

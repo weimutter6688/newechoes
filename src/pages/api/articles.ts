@@ -1,7 +1,11 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { contentStructure } from '../../content.config';
-import type { SectionStructure } from '../../content.config';
+import { getSpecialPath } from '../../content.config';
+
+// 处理特殊ID的函数
+function getArticleUrl(articleId: string) {
+  return `/articles/${getSpecialPath(articleId)}`;
+}
 
 export const GET: APIRoute = async ({ request }) => {
   // 获取查询参数
@@ -14,6 +18,12 @@ export const GET: APIRoute = async ({ request }) => {
   // 获取所有文章
   const articles = await getCollection('articles');
   
+  // 打印所有文章的ID，用于调试
+  console.log('所有文章的ID:');
+  articles.forEach(article => {
+    console.log(`- ${article.id}`);
+  });
+  
   // 根据条件过滤文章
   let filteredArticles = articles;
   
@@ -24,52 +34,20 @@ export const GET: APIRoute = async ({ request }) => {
     );
   }
   
-  // 如果有路径过滤，需要从contentStructure中查找对应目录下的文章
+  // 如果有路径过滤，直接使用文章ID来判断
   if (path) {
-    // 解析路径
-    const pathSegments = path.split('/').filter(segment => segment.trim() !== '');
+    const normalizedPath = path.toLowerCase();
+    console.log('当前过滤路径:', normalizedPath);
     
-    // 递归查找目录
-    const findArticlesInPath = (sections: SectionStructure[], currentPath = ''): string[] => {
-      for (const section of sections) {
-        const sectionPath = currentPath ? `${currentPath}/${section.name}` : section.name;
-        
-        // 如果找到匹配的目录
-        if (sectionPath === path) {
-          return section.articles;
-        }
-        
-        // 递归查找子目录
-        const articlesInSubsection = findArticlesInPath(section.sections, sectionPath);
-        if (articlesInSubsection.length > 0) {
-          return articlesInSubsection;
-        }
-      }
+    filteredArticles = filteredArticles.filter(article => {
+      const articlePath = article.id.split('/');
+      console.log('处理文章:', article.id, '分割后:', articlePath);
       
-      return [];
-    };
+      // 检查文章路径的每一部分
+      return article.id.toLowerCase().includes(normalizedPath);
+    });
     
-    // 获取目录下的文章路径
-    const articlePaths = findArticlesInPath(contentStructure.sections);
-    
-    // 根据路径过滤文章
-    if (articlePaths.length > 0) {
-      filteredArticles = filteredArticles.filter(article => {
-        // 检查文章ID是否在目录的文章列表中
-        return articlePaths.some(articlePath => {
-          const articleId = article.id;
-          const pathParts = articlePath.split('/');
-          const fileName = pathParts[pathParts.length - 1];
-          
-          // 尝试多种匹配方式
-          return (
-            articlePath.includes(articleId) || 
-            articleId.includes(fileName) || 
-            fileName.includes(articleId)
-          );
-        });
-      });
-    }
+    console.log('过滤后的文章数量:', filteredArticles.length);
   }
   
   // 按日期排序（最新的在前面）
@@ -82,74 +60,25 @@ export const GET: APIRoute = async ({ request }) => {
   const endIndex = startIndex + limit;
   const paginatedArticles = sortedArticles.slice(startIndex, endIndex);
   
-  // 格式化文章数据，只返回需要的字段
-  const formattedArticles = paginatedArticles.map(article => {
-    // 查找文章所属的目录
-    let section = '';
-    
-    // 递归查找文章所属的目录
-    const findSection = (sections: SectionStructure[], articleId: string, parentPath = ''): string | null => {
-      for (const sec of sections) {
-        const sectionPath = parentPath ? `${parentPath}/${sec.name}` : sec.name;
-        
-        // 检查文章是否在当前目录中
-        for (const artPath of sec.articles) {
-          const pathParts = artPath.split('/');
-          const fileName = pathParts[pathParts.length - 1];
-          
-          // 尝试多种匹配方式
-          if (
-            artPath.includes(articleId) || 
-            articleId.includes(fileName) || 
-            fileName.includes(articleId)
-          ) {
-            return sectionPath;
-          }
-        }
-        
-        // 递归检查子目录
-        const foundInSubsection = findSection(sec.sections, articleId, sectionPath);
-        if (foundInSubsection) {
-          return foundInSubsection;
-        }
-      }
-      
-      return null;
-    };
-    
-    section = findSection(contentStructure.sections, article.id) || '';
-    
-    return {
-      id: article.id,
-      title: article.data.title,
-      date: article.data.date.toISOString(),
-      summary: article.data.summary || '',
-      tags: article.data.tags || [],
-      section: section
-    };
-  });
+  // 格式化文章数据
+  const formattedArticles = paginatedArticles.map(article => ({
+    id: article.id,
+    title: article.data.title,
+    date: article.data.date,
+    tags: article.data.tags || [],
+    summary: article.data.summary || '',
+    url: getArticleUrl(article.id) // 使用特殊ID处理函数
+  }));
   
-  // 构建分页信息
-  const pagination = {
+  return new Response(JSON.stringify({
+    articles: formattedArticles,
     total: sortedArticles.length,
-    current: page,
-    limit: limit,
-    hasNext: endIndex < sortedArticles.length,
-    hasPrev: page > 1,
+    page,
+    limit,
     totalPages: Math.ceil(sortedArticles.length / limit)
-  };
-  
-  // 返回JSON响应
-  return new Response(
-    JSON.stringify({
-      articles: formattedArticles,
-      pagination: pagination
-    }),
-    {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+  }), {
+    headers: {
+      'Content-Type': 'application/json'
     }
-  );
+  });
 }; 
