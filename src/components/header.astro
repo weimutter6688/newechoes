@@ -11,13 +11,14 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
 // 定义导航链接
 
 ---
-<header class="fixed w-full top-0 z-50 bg-white/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-secondary-200 dark:border-dark-border">
-    <nav>
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+<header class="fixed w-full top-0 z-50 transition-all duration-300" id="main-header">
+    <div class="absolute inset-0 bg-gray-50/95 dark:bg-dark-bg/95 transition-all duration-300" id="header-bg"></div>
+    <nav class="relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <!-- Logo 部分 -->
                 <div class="flex items-center">
-                    <a href="/" class="text-lg font-semibold text-primary-900 dark:text-primary-100 hover:text-primary-600 dark:hover:text-primary-400">
+                    <a href="/" class="text-xl md:text-2xl font-bold tracking-tight transition-all duration-300 ease-in-out bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent hover:from-primary-500 hover:to-primary-300 dark:from-primary-400 dark:to-primary-200 dark:hover:from-primary-300 dark:hover:to-primary-100">
                         {SITE_NAME}
                     </a>
                 </div>
@@ -45,14 +46,143 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
                     <button 
                         type="button" 
                         class="inline-flex items-center justify-center p-2 rounded-md text-secondary-400 dark:text-secondary-500 hover:text-secondary-500 dark:hover:text-secondary-400 hover:bg-secondary-100 dark:hover:bg-dark-card focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                        id="mobile-menu-button"
+                        aria-expanded="false"
                     >
                         <span class="sr-only">打开菜单</span>
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-6 w-6 block" id="menu-open-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="h-6 w-6 hidden" id="menu-close-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
+
+        <!-- 移动端菜单 -->
+        <div class="hidden md:hidden fixed inset-x-0 top-16 z-40" id="mobile-menu">
+            <div id="mobile-menu-bg">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                    <div class="grid gap-1">
+                        {NAV_LINKS.map(link => (
+                            <a
+                                href={link.href}
+                                class:list={[
+                                    'flex items-center px-3 py-3 rounded-lg text-base font-medium transition-all duration-200 ease-in-out',
+                                    normalizedPath === (link.href === '/' ? '' : link.href)
+                                        ? 'text-white bg-primary-600 dark:bg-primary-500 shadow-sm'
+                                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/70'
+                                ]}
+                            >
+                                {link.text}
+                            </a>
+                        ))}
+                        <div class="mt-2 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">切换主题</span>
+                            <ThemeToggle client:load />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </nav>
 </header>
+
+<style>
+    #header-bg {
+        opacity: 1;
+        backdrop-filter: blur(0);
+        transition: all 0.5s ease;
+    }
+    
+    #header-bg.scrolled {
+        backdrop-filter: blur(6px);
+        background: rgba(249, 250, 251, 0.8);
+        box-shadow: 
+            0 1px 2px rgba(0, 0, 0, 0.04),
+            0 2px 4px rgba(0, 0, 0, 0.04),
+            0 4px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    :global([data-theme="dark"]) #header-bg.scrolled {
+        background: rgba(15, 23, 42, 0.8);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* 移动端菜单样式 */
+    #mobile-menu {
+        /* 移除过渡效果，确保菜单内容立即显示 */
+        opacity: 1;
+        transform: translateY(0);
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        /* 确保子元素不受过渡效果影响 */
+        contain: layout;
+    }
+    
+    /* 移动端菜单背景 */
+    #mobile-menu-bg {
+        /* 直接应用高斯模糊，不使用过渡效果 */
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        background: rgba(249, 250, 251, 0.8);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+        /* 确保高斯模糊立即应用 */
+        will-change: backdrop-filter;
+    }
+
+    :global([data-theme="dark"]) #mobile-menu-bg {
+        background: rgba(15, 23, 42, 0.8);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+</style>
+
+<script>
+    const header = document.getElementById('header-bg');
+    const mobileMenuBg = document.getElementById('mobile-menu-bg');
+    const scrollThreshold = 50;
+
+    function updateHeaderBackground() {
+        if (window.scrollY > scrollThreshold) {
+            header?.classList.add('scrolled');
+        } else {
+            header?.classList.remove('scrolled');
+        }
+    }
+
+    // 初始检查
+    updateHeaderBackground();
+
+    // 添加滚动事件监听
+    window.addEventListener('scroll', updateHeaderBackground);
+
+    // 移动端菜单逻辑
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuOpenIcon = document.getElementById('menu-open-icon');
+    const menuCloseIcon = document.getElementById('menu-close-icon');
+
+    if (mobileMenuButton && mobileMenu && menuOpenIcon && menuCloseIcon) {
+        mobileMenuButton.addEventListener('click', () => {
+            const expanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+            
+            // 切换菜单状态
+            mobileMenuButton.setAttribute('aria-expanded', (!expanded).toString());
+            
+            if (expanded) {
+                // 直接隐藏菜单，不使用过渡效果
+                mobileMenu.classList.add('hidden');
+            } else {
+                // 直接显示菜单，不使用过渡效果
+                mobileMenu.classList.remove('hidden');
+            }
+            
+            // 切换图标
+            menuOpenIcon.classList.toggle('hidden');
+            menuCloseIcon.classList.toggle('hidden');
+        });
+    }
+</script>
+

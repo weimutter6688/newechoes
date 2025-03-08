@@ -187,14 +187,6 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
     700: 1
   };
 
-  if (loading && projects.length === 0) {
-    return <div className="flex justify-center p-8">加载中...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 p-4">错误: {error}</div>;
-  }
-
   const getPlatformName = (platform: GitPlatform) => {
     return GIT_PLATFORM_CONFIG.platformNames[platform];
   };
@@ -203,7 +195,7 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
   const displayTitle = title || `${getPlatformName(platform)} 项目`;
 
   return (
-    <div className="git-project-collection">
+    <div className="git-project-collection max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h2 className="text-2xl font-bold mb-6 text-primary-700">
         {displayTitle}
         {effectiveUsername && <span className="ml-2 text-secondary-500">(@{effectiveUsername})</span>}
@@ -227,13 +219,13 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
           columnClassName="pl-4 bg-clip-padding"
         >
           {projects.map((project, index) => (
-            <div key={`${project.platform}-${project.owner}-${project.name}-${index}`} className="mb-4 overflow-hidden rounded-lg border border-secondary-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-              <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-4">
-                <div className="flex items-center mb-2">
-                  <div className="mr-2 text-secondary-600">
+            <div key={`${project.platform}-${project.owner}-${project.name}-${index}`} className="mb-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
+              <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-5">
+                <div className="flex items-start">
+                  <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200 transition-colors">
                     {getPlatformIcon(project.platform as GitPlatform)}
                   </div>
-                  <div className="flex-1 truncate">
+                  <div className="ml-3 flex-1">
                     <div className="flex items-center">
                       <img 
                         src={project.avatarUrl} 
@@ -245,44 +237,48 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
                           target.src = 'https://via.placeholder.com/40';
                         }}
                       />
-                      <span className="text-sm text-secondary-600 truncate">{project.owner}</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate">{project.owner}</span>
                     </div>
-                  </div>
-                </div>
-                
-                <h3 className="text-lg font-semibold mb-1 text-primary-800 line-clamp-1">{project.name}</h3>
-                
-                {project.description && (
-                  <p className="text-secondary-700 text-sm mb-3 line-clamp-2">{project.description}</p>
-                )}
-                
-                <div className="flex flex-wrap items-center text-xs mt-2">
-                  {project.language && (
-                    <div className="flex items-center mr-4 mb-1">
-                      <span className={`w-3 h-3 rounded-full mr-1 ${getLanguageColor(project.language)}`}></span>
-                      <span className="text-secondary-600">{project.language}</span>
+                    
+                    <h3 className="font-bold text-base text-gray-800 dark:text-gray-100 group-hover:text-primary-700 dark:group-hover:text-primary-300 transition-colors line-clamp-1 mt-2">{project.name}</h3>
+                    
+                    <div className="h-12 mb-3">
+                      {project.description ? (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{project.description}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 dark:text-gray-500 italic">暂无描述</p>
+                      )}
                     </div>
-                  )}
-                  
-                  <div className="flex items-center mr-4 mb-1">
-                    <svg className="w-4 h-4 mr-1 text-secondary-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1zm-5 8.274l-.818 2.552c.25.112.526.174.818.174.292 0 .569-.062.818-.174L5 10.274zm10 0l-.818 2.552c.25.112.526.174.818.174.292 0 .569-.062.818-.174L15 10.274z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-secondary-600">{project.stars}</span>
-                  </div>
-                  
-                  <div className="flex items-center mr-4 mb-1">
-                    <svg className="w-4 h-4 mr-1 text-secondary-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-secondary-600">{project.forks}</span>
-                  </div>
-                  
-                  <div className="flex items-center mb-1 ml-auto">
-                    <svg className="w-4 h-4 mr-1 text-secondary-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-secondary-500">{new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span>
+                    
+                    <div className="flex flex-wrap items-center text-xs gap-4">
+                      {project.language && (
+                        <div className="flex items-center">
+                          <span className={`w-3 h-3 rounded-full mr-1.5 ${getLanguageColor(project.language)}`}></span>
+                          <span className="text-gray-600 dark:text-gray-400">{project.language}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-1.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        <span className="text-gray-600 dark:text-gray-400">{project.stars}</span>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-1.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                        <span className="text-gray-600 dark:text-gray-400">{project.forks}</span>
+                      </div>
+                      
+                      <div className="flex items-center ml-auto">
+                        <svg className="w-4 h-4 mr-1.5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-gray-500 dark:text-gray-400">{new Date(project.updatedAt).toLocaleDateString('zh-CN')}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </a>

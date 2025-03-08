@@ -1,0 +1,22 @@
+---
+import Layout from '@/components/Layout.astro';
+import { GitPlatform } from '@/components/GitProjectCollection';
+import GitProjectCollection from '@/components/GitProjectCollection';
+---
+
+<Layout title="项目 | echoes">
+  <main class="container mx-auto px-4 py-8">
+    
+    <div class="space-y-12">
+      <!-- Gitea 项目集合 -->
+      <GitProjectCollection 
+        platform={GitPlatform.GITEA} 
+        username="lsy"
+        title="Gitea 个人项目"
+        client:load
+      />
+      
+
+    </div>
+  </main>
+</Layout>

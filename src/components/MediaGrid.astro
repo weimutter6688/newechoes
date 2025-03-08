@@ -7,7 +7,7 @@ interface Props {
 const { type, title } = Astro.props;
 ---
 
-<div class="container mx-auto px-4 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <h1 class="text-3xl font-bold mb-6">{title}</h1>
   
   <div id="media-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -102,12 +102,9 @@ const { type, title } = Astro.props;
     const loading = document.getElementById('loading');
     if (loading) {
       if (show) {
-        loading.innerHTML = `
-          <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-          <p class="mt-2 text-gray-600">加载更多...</p>
-        `;
+        loading.classList.remove('hidden');
       } else {
-        loading.innerHTML = `<div class="h-8"></div>`; // 保持元素可见但内容为空
+        loading.classList.add('hidden');
       }
     }
   }
@@ -124,9 +121,7 @@ const { type, title } = Astro.props;
     window.addEventListener('scroll', handleScroll);
     
     // 初始检查一次，以防内容不足一屏
-    setTimeout(() => {
-      handleScroll();
-    }, 500);
+    setTimeout(handleScroll, 500);
   }
 
   function handleScroll() {

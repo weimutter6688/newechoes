@@ -55,11 +55,6 @@ const DoubanCollection: React.FC<DoubanCollectionProps> = ({ type }) => {
     fetchData();
   }, [type]);
 
-  const updatePage = (page: number) => {
-    const start = (page - 1) * 15;
-    fetchData(start);
-  };
-
   const handlePageChange = (page: number) => {
     const start = (page - 1) * 15;
     
