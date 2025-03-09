@@ -1,200 +1,96 @@
 ---
+import type { CollectionEntry } from 'astro:content';
+
 interface Props {
   title?: string;
   itemsPerPage?: number;
+  articles: CollectionEntry<'articles'>[];
 }
 
 const { 
   title = "文章时间线", 
-  itemsPerPage = 10 
+  itemsPerPage = 10,
+  articles = []
 } = Astro.props;
+
+// 按日期排序文章
+const sortedArticles = articles.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
 ---
 
 <div class="container mx-auto px-4 py-8">
   {title && <h1 class="text-3xl font-bold mb-6 text-primary-900 dark:text-primary-100">{title}</h1>}
   
   <div id="article-timeline" class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-px before:bg-gradient-to-b before:from-transparent before:via-primary-300 before:to-transparent md:before:mx-auto md:before:translate-x-0">
-    <!-- 内容将通过JS动态加载 -->
-  </div>
-  
-  <div id="loading" class="text-center py-8">
-    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-500 dark:border-primary-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-    <p class="mt-2 text-secondary-600 dark:text-secondary-400">加载更多...</p>
-  </div>
-  
-  <div id="end-message" class="text-center py-8 hidden">
-    <p class="text-secondary-600 dark:text-secondary-400">已加载全部内容</p>
-  </div>
-</div>
+    {sortedArticles.length > 0 ? (
+      sortedArticles.map((article, index) => {
+        const isEven = index % 2 === 0;
+        return (
+          <div class="relative group">
+            {/* 时间线节点 */}
+            <div class="absolute left-5 -translate-x-1/2 md:left-1/2 top-6 flex h-3 w-3 items-center justify-center">
+              <div class="h-2 w-2 rounded-full bg-primary-500 dark:bg-primary-400 ring-2 ring-white dark:ring-gray-900 ring-offset-2 ring-offset-white dark:ring-offset-gray-900"></div>
+            </div>
 
-<script is:inline define:vars={{ itemsPerPage }}>
-  let currentPage = 1;
-  let isLoading = false;
-  let hasMoreContent = true;
+            {/* 文章卡片 */}
+            <a href={`/articles/${article.id}`} 
+               class={`group/card ml-10 md:ml-0 ${isEven ? 'md:mr-[50%] md:pr-8' : 'md:ml-[50%] md:pl-8'} block`}>
+              <article class="relative flex flex-col gap-4 rounded-xl bg-white dark:bg-gray-800 p-6 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+                {/* 日期标签 */}
+                <time datetime={article.data.date.toISOString()} 
+                      class="absolute top-4 right-4 text-xs font-medium text-secondary-500 dark:text-secondary-400">
+                  {article.data.date.toLocaleDateString('zh-CN', {year: 'numeric', month: 'long', day: 'numeric'})}
+                </time>
 
-  async function fetchArticles(page = 1, append = false) {
-    if (isLoading || (!append && !hasMoreContent)) {
-      return;
-    }
-    
-    isLoading = true;
-    showLoading(true);
-    
-    try {
-      const response = await fetch(`/api/articles?page=${page}&limit=${itemsPerPage}`);
-      if (!response.ok) {
-        throw new Error('获取文章数据失败');
-      }
-      
-      const data = await response.json();
-      renderArticles(data.articles, append);
-      
-      // 更新分页状态
-      currentPage = data.pagination.current;
-      hasMoreContent = data.pagination.hasNext;
-      
-      if (!hasMoreContent) {
-        showEndMessage(true);
-      }
-    } catch (error) {
-      const articleTimeline = document.getElementById('article-timeline');
-      if (articleTimeline && !append) {
-        articleTimeline.innerHTML = '<div class="text-center text-red-500 py-4">获取数据失败，请稍后再试</div>';
-      }
-    } finally {
-      isLoading = false;
-      showLoading(false);
-    }
-  }
+                {/* 文章标题 */}
+                <h3 class="pr-16 text-xl font-bold text-gray-900 dark:text-gray-100 group-hover/card:text-primary-600 dark:group-hover/card:text-primary-400 transition-colors">
+                  {article.data.title}
+                </h3>
 
-  function renderArticles(articles, append = false) {
-    const articleTimeline = document.getElementById('article-timeline');
-    if (!articleTimeline) return;
-    
-    if (!articles || articles.length === 0) {
-      if (!append) {
-        articleTimeline.innerHTML = '<div class="text-center py-4 text-secondary-600 dark:text-secondary-400">暂无文章数据</div>';
-      }
-      return;
-    }
+                {/* 文章摘要 */}
+                {article.data.summary && (
+                  <p class="text-secondary-600 dark:text-secondary-300 line-clamp-2">
+                    {article.data.summary}
+                  </p>
+                )}
 
-    const articlesHTML = articles.map((article, index) => {
-      const isEven = index % 2 === 0;
-      return `
-        <div class="relative group">
-          <!-- 时间线节点 -->
-          <div class="absolute left-5 -translate-x-1/2 md:left-1/2 top-6 flex h-3 w-3 items-center justify-center">
-            <div class="h-2 w-2 rounded-full bg-primary-500 dark:bg-primary-400 ring-2 ring-white dark:ring-gray-900 ring-offset-2 ring-offset-white dark:ring-offset-gray-900"></div>
-          </div>
-
-          <!-- 文章卡片 -->
-          <a href="/articles/${article.id}" 
-             class="group/card ml-10 md:ml-0 ${isEven ? 'md:mr-[50%] md:pr-8' : 'md:ml-[50%] md:pl-8'} block">
-            <article class="relative flex flex-col gap-4 rounded-xl bg-white dark:bg-gray-800 p-6 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-200 dark:border-gray-700">
-              <!-- 日期标签 -->
-              <time datetime="${article.date}" 
-                    class="absolute top-4 right-4 text-xs font-medium text-secondary-500 dark:text-secondary-400">
-                ${new Date(article.date).toLocaleDateString('zh-CN', {year: 'numeric', month: 'long', day: 'numeric'})}
-              </time>
-
-              <!-- 文章标题 -->
-              <h3 class="pr-16 text-xl font-bold text-gray-900 dark:text-gray-100 group-hover/card:text-primary-600 dark:group-hover/card:text-primary-400 transition-colors">
-                ${article.title}
-              </h3>
-
-              <!-- 文章摘要 -->
-              ${article.summary ? `
-              <p class="text-secondary-600 dark:text-secondary-300 line-clamp-2">
-                ${article.summary}
-              </p>
-              ` : ''}
-
-              <!-- 文章元信息 -->
-              <div class="flex flex-wrap items-center gap-4 text-sm">
-                ${article.section ? `
-                <span class="flex items-center text-secondary-500 dark:text-secondary-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                  ${article.section}
-                </span>
-                ` : ''}
-
-                ${article.tags && article.tags.length > 0 ? `
-                <div class="flex flex-wrap gap-2">
-                  ${article.tags.map(tag => `
-                    <span class="text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 py-1 px-2 rounded-full">
-                      #${tag}
+                {/* 文章元信息 */}
+                <div class="flex flex-wrap items-center gap-4 text-sm">
+                  {article.data.section && (
+                    <span class="flex items-center text-secondary-500 dark:text-secondary-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                      {article.data.section}
                     </span>
-                  `).join('')}
+                  )}
+
+                  {article.data.tags && article.data.tags.length > 0 && (
+                    <div class="flex flex-wrap gap-2">
+                      {article.data.tags.map(tag => (
+                        <span class="text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 py-1 px-2 rounded-full">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                ` : ''}
-              </div>
 
-              <!-- 阅读更多指示器 -->
-              <div class="flex items-center text-sm text-primary-600 dark:text-primary-400 group-hover/card:translate-x-1 transition-transform">
-                <span class="font-medium">阅读全文</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </article>
-          </a>
-        </div>
-      `;
-    }).join('');
-
-    if (append) {
-      articleTimeline.innerHTML += articlesHTML;
-    } else {
-      articleTimeline.innerHTML = articlesHTML;
-    }
-  }
-
-  function showLoading(show) {
-    const loading = document.getElementById('loading');
-    if (loading) {
-      if (show) {
-        loading.classList.remove('hidden');
-      } else {
-        loading.classList.add('hidden');
-      }
-    }
-  }
-
-  function showEndMessage(show) {
-    const endMessage = document.getElementById('end-message');
-    if (endMessage) {
-      endMessage.classList.toggle('hidden', !show);
-    }
-  }
-
-  function setupInfiniteScroll() {
-    // 直接使用滚动事件
-    window.addEventListener('scroll', handleScroll);
-    
-    // 初始检查一次，以防内容不足一屏
-    setTimeout(handleScroll, 500);
-  }
-
-  function handleScroll() {
-    if (isLoading || !hasMoreContent) {
-      return;
-    }
-    
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    
-    // 当滚动到距离底部300px时加载更多
-    if (scrollY + windowHeight >= documentHeight - 300) {
-      fetchArticles(currentPage + 1, true);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    fetchArticles(1, false).then(() => {
-      setupInfiniteScroll();
-    });
-  });
-</script> 
+                {/* 阅读更多指示器 */}
+                <div class="flex items-center text-sm text-primary-600 dark:text-primary-400 group-hover/card:translate-x-1 transition-transform">
+                  <span class="font-medium">阅读全文</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+              </article>
+            </a>
+          </div>
+        );
+      })
+    ) : (
+      <div class="text-center py-4 text-secondary-600 dark:text-secondary-400">暂无文章数据</div>
+    )}
+  </div>
+</div> 

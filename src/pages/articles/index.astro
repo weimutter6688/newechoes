@@ -5,6 +5,10 @@ import { contentStructure, getRelativePath, getBasename, getDirPath, getSpecialP
 import Layout from '@/components/Layout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
 import ArticleTimeline from '@/components/ArticleTimeline.astro';
+
+// 启用静态预渲染
+export const prerender = true;
+
 export function extractSummary(content: string, length = 150) {
   // 移除 Markdown 标记
   const plainText = content
@@ -20,8 +24,90 @@ export function extractSummary(content: string, length = 150) {
     : plainText;
 } 
 
-// 预渲染页面，但允许客户端导航
-export const prerender = false;
+// 生成所有可能的静态路径
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  const { sections } = contentStructure;
+  const allTags = articles.flatMap(article => article.data.tags || []);
+  const tags = [...new Set(allTags)].sort();
+  const views = ['grid', 'timeline'];
+
+  // 生成所有可能的路径组合
+  const paths = [];
+
+  // 1. 默认路径（无参数）
+  paths.push({ params: { path: undefined }, props: { path: '', tag: '', view: 'grid' } });
+
+  // 2. 标签路径
+  for (const tag of tags) {
+    // 标签主页
+    paths.push({ 
+      params: { tag }, 
+      props: { path: '', tag, view: 'grid' } 
+    });
+
+    // 标签视图页
+    for (const view of views) {
+      paths.push({ 
+        params: { tag, view }, 
+        props: { path: '', tag, view } 
+      });
+    }
+  }
+
+  // 3. 目录路径
+  function addSectionPaths(section: any, currentPath = '') {
+    const sectionPath = currentPath ? `${currentPath}/${section.name}` : section.name;
+    
+    // 添加当前目录的路径（不带 view 参数）
+    paths.push({ 
+      params: { path: sectionPath }, 
+      props: { path: sectionPath, tag: '', view: 'grid' } 
+    });
+
+    // 添加当前目录的视图路径
+    for (const view of views) {
+      paths.push({ 
+        params: { path: sectionPath, view }, 
+        props: { path: sectionPath, tag: '', view } 
+      });
+    }
+
+    // 递归添加子目录的路径
+    for (const subSection of section.sections) {
+      addSectionPaths(subSection, sectionPath);
+    }
+  }
+
+  for (const section of sections) {
+    addSectionPaths(section);
+  }
+
+  // 4. 添加所有可能的目录路径（不带 view 参数）
+  function addAllPossiblePaths(section: any, currentPath = '') {
+    const sectionPath = currentPath ? `${currentPath}/${section.name}` : section.name;
+    
+    // 添加当前目录的路径
+    paths.push({ 
+      params: { path: sectionPath }, 
+      props: { path: sectionPath, tag: '', view: 'grid' } 
+    });
+
+    // 递归添加子目录的路径
+    for (const subSection of section.sections) {
+      addAllPossiblePaths(subSection, sectionPath);
+    }
+  }
+
+  for (const section of sections) {
+    addAllPossiblePaths(section);
+  }
+
+  return paths;
+}
+
+const { path = '', tag = '', view = 'grid' } = Astro.props;
+const pathSegments = path ? path.split('/') : [];
 
 // 获取所有文章，并按日期排序
 const articles: CollectionEntry<'articles'>[] = await getCollection('articles');
@@ -36,15 +122,11 @@ const tags = [...new Set(allTags)].sort();
 // 获取内容结构
 const { sections } = contentStructure;
 
-// 获取当前路径参数
-const path = Astro.url.searchParams.get('path') || '';
-const pathSegments = path ? decodeURIComponent(path).split('/') : [];
-
 // 获取标签参数
-const tagFilter = Astro.url.searchParams.get('tag') || '';
+const tagFilter = tag;
 
 // 获取视图模式参数
-const viewMode = Astro.url.searchParams.get('view') || 'grid';
+const viewMode = view;
 
 // 根据路径获取当前目录
 function getCurrentSection(pathSegments: string[]) {
@@ -132,7 +214,7 @@ function getArticleUrl(articleId: string) {
             
             <!-- 视图切换按钮 -->
             <div class="flex items-center gap-px">
-              <a href={`/articles?${new URLSearchParams({...Object.fromEntries(Astro.url.searchParams), view: 'grid'}).toString()}`}
+              <a href={`/articles/${path}${tag ? `/tag/${tag}` : ''}/grid`}
                  class={`px-3 py-1.5 transition-colors flex items-center gap-1 ${
                    viewMode === 'grid' 
                      ? 'text-primary-600' 
@@ -142,7 +224,7 @@ function getArticleUrl(articleId: string) {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
               </a>
-              <a href={`/articles?${new URLSearchParams({...Object.fromEntries(Astro.url.searchParams), view: 'timeline'}).toString()}`}
+              <a href={`/articles/${path}${tag ? `/tag/${tag}` : ''}/timeline`}
                  class={`px-3 py-1.5 transition-colors flex items-center gap-1 ${
                    viewMode === 'timeline' 
                      ? 'text-primary-600' 
@@ -163,7 +245,7 @@ function getArticleUrl(articleId: string) {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {/* 上一级目录卡片 - 仅在浏览目录时显示 */}
             {!tagFilter && pathSegments.length > 0 && (
-              <a href={`/articles${pathSegments.length > 1 ? `?path=${encodeURIComponent(pathSegments.slice(0, -1).join('/'))}` : ''}`} 
+              <a href={`/articles/${pathSegments.length > 1 ? pathSegments.slice(0, -1).join('/') : ''}`} 
                  class="group flex flex-col h-full p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
                 <div class="flex items-center">
                   <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200 transition-colors">
@@ -190,7 +272,7 @@ function getArticleUrl(articleId: string) {
               const dirLink = currentPath ? `${currentPath}/${section.name}` : section.name;
               
               return (
-                <a href={`/articles?path=${encodeURIComponent(dirLink)}`} 
+                <a href={`/articles/${dirLink}`} 
                    class="group flex flex-col h-full p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
                   <div class="flex items-center">
                     <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary-100 text-primary-600 group-hover:bg-primary-200 transition-colors">
@@ -389,7 +471,7 @@ function getArticleUrl(articleId: string) {
               {tags.map(tag => {
                 const isActive = tag === tagFilter;
                 return (
-                  <a href={`/articles?tag=${tag}`} 
+                  <a href={`/articles/tag/${tag}`} 
                      class={`py-2 px-4 rounded-full text-sm font-medium transition-all duration-300 ${
                        isActive 
                          ? 'bg-primary-600 text-white dark:bg-primary-500 dark:text-gray-100 hover:bg-primary-700 dark:hover:bg-primary-600 shadow-md hover:shadow-lg' 
@@ -403,7 +485,7 @@ function getArticleUrl(articleId: string) {
           </div>
         </>
       ) : (
-        <ArticleTimeline title="" itemsPerPage={10} />
+        <ArticleTimeline title="" itemsPerPage={10} articles={sortedArticles} />
       )}
     </main>
   </div>

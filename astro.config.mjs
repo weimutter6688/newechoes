@@ -4,13 +4,14 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
 import react from '@astrojs/react';
-import node from '@astrojs/node';
 import remarkEmoji from 'remark-emoji';
 import rehypeExternalLinks from 'rehype-external-links';
 import sitemap from '@astrojs/sitemap';
 import fs from 'node:fs';
 import path from 'node:path';
 import { SITE_URL } from './src/consts';
+
+import vercel from '@astrojs/vercel';
 
 function getArticleDate(articleId) {
   try {
@@ -30,12 +31,14 @@ function getArticleDate(articleId) {
 
 // https://astro.build/config
 export default defineConfig({
-  site: SITE_URL, // 替换为您的实际网站 URL
-  output: 'server',
+  site: SITE_URL,
+  output: 'static',
   trailingSlash: 'ignore',
+
   build: {
     format: 'directory'
   },
+
   vite: {
     plugins: [tailwindcss()],
     build: {
@@ -49,6 +52,8 @@ export default defineConfig({
             'react-vendor': ['react', 'react-dom'],
             // 其他大型依赖也可以单独打包
             'chart-vendor': ['chart.js'],
+            // 将 ECharts 单独打包
+            'echarts-vendor': ['echarts'],
             // 将其他组件打包到一起
             'components': ['./src/components']
           }
@@ -102,12 +107,7 @@ export default defineConfig({
       entryLimit: 5
     })
   ],
-  
-  // 添加 Node.js 适配器配置
-  adapter: node({
-    mode: 'standalone' // 独立模式，适合大多数部署环境
-  }),
-  
+
   // Markdown 配置
   markdown: {
     syntaxHighlight: 'prism',
@@ -126,5 +126,7 @@ export default defineConfig({
       // 启用自动换行，防止水平滚动
       wrap: true,
     }
-  }
+  },
+
+  adapter: vercel()
 });

@@ -18,7 +18,6 @@ export const VISITED_PLACES = [ '黑龙江', '吉林', '辽宁',  '北京', '天
 
 export const DOUBAN_ID = 'lsy22';
 
-
 // Git 配置 - 只包含用户需要修改的内容
 export const GIT_CONFIG = {
     // 每页显示的项目数量
