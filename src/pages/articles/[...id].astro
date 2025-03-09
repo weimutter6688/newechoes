@@ -35,14 +35,14 @@ export async function getStaticPaths() {
             `articles/${sectionPath}/${basename}` // 添加集合名称前缀和目录路径
           ];
           
-          // 精确匹配
-          if (possibleIds.includes(articleId)) {
+          // 精确匹配（不区分大小写）
+          if (possibleIds.some(id => id.toLowerCase() === articleId.toLowerCase())) {
             return sectionPath;
           }
           
-          // 检查文章ID是否以某个可能的ID结尾
+          // 检查文章ID是否以某个可能的ID结尾（不区分大小写）
           for (const possibleId of possibleIds) {
-            if (articleId.endsWith(possibleId)) {
+            if (articleId.toLowerCase().endsWith(possibleId.toLowerCase())) {
               return sectionPath;
             }
           }

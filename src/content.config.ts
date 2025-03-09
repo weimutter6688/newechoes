@@ -93,7 +93,7 @@ export function getSpecialPath(originalPath: string): string {
   // 如果文件名与目录名相同或以目录名开头，则在文件名前添加特殊前缀
   if (parts.length > 1) {
     const dirName = parts[parts.length - 2];
-    if (fileName === dirName || fileName.startsWith(dirName)) {
+    if (fileName.toLowerCase() === dirName.toLowerCase() || fileName.toLowerCase().startsWith(dirName.toLowerCase())) {
       // 创建一个新的路径，在文件名前添加下划线前缀
       const newFileName = fileName.startsWith('_') ? fileName : `_${fileName}`;
       const fileExt = originalPath.endsWith('.md') ? '.md' : '';
