@@ -3,13 +3,11 @@ import type { CollectionEntry } from 'astro:content';
 
 interface Props {
   title?: string;
-  itemsPerPage?: number;
   articles: CollectionEntry<'articles'>[];
 }
 
 const { 
   title = "文章时间线", 
-  itemsPerPage = 10,
   articles = []
 } = Astro.props;
 
