@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ReactMasonryCss from 'react-masonry-css';
-import { GIT_CONFIG } from '@/consts';
 
 // Git 平台类型枚举
 export enum GitPlatform {
@@ -9,30 +8,37 @@ export enum GitPlatform {
   GITEE = 'gitee'
 }
 
-// 内部使用的平台配置 - 用户不需要修改
-export const GIT_PLATFORM_CONFIG = {
-  platforms: {
-      [GitPlatform.GITHUB]: {
-          ...GIT_CONFIG.github,
-          apiUrl: 'https://api.github.com'
-      },
-      [GitPlatform.GITEA]: {
-          ...GIT_CONFIG.gitea
-      },
-      [GitPlatform.GITEE]: {
-          ...GIT_CONFIG.gitee,
-          apiUrl: 'https://gitee.com/api/v5'
-      }
-  },
-  enabledPlatforms: [GitPlatform.GITHUB, GitPlatform.GITEA, GitPlatform.GITEE],
-  platformNames: {
-      [GitPlatform.GITHUB]: 'GitHub',
-      [GitPlatform.GITEA]: 'Gitea',
-      [GitPlatform.GITEE]: 'Gitee'
-  }
+// Git 配置接口
+export type GitConfig = {
+  username: string;
+  token?: string;
+  perPage?: number;
+  url?: string;
 };
 
+// 平台默认配置
+export const DEFAULT_GIT_CONFIG = {
+  perPage: 10,
+  giteaUrl: ''
+};
 
+// 内部使用的平台配置
+export const GIT_PLATFORM_CONFIG = {
+  platforms: {
+    [GitPlatform.GITHUB]: {
+      apiUrl: 'https://api.github.com'
+    },
+    [GitPlatform.GITEA]: {},
+    [GitPlatform.GITEE]: {
+      apiUrl: 'https://gitee.com/api/v5'
+    }
+  },
+  platformNames: {
+    [GitPlatform.GITHUB]: 'GitHub',
+    [GitPlatform.GITEA]: 'Gitea',
+    [GitPlatform.GITEE]: 'Gitee'
+  }
+};
 
 interface GitProject {
   name: string;
@@ -59,13 +65,15 @@ interface GitProjectCollectionProps {
   username?: string;
   organization?: string;
   title?: string;
+  config: GitConfig;
 }
 
 const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({ 
   platform, 
   username, 
   organization,
-  title
+  title,
+  config
 }) => {
   const [projects, setProjects] = useState<GitProject[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ current: 1, total: 1, hasNext: false, hasPrev: false });
@@ -73,36 +81,49 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isPageChanging, setIsPageChanging] = useState(false);
 
-  // 获取默认用户名
-  const defaultUsername = GIT_PLATFORM_CONFIG.platforms[platform].username;
-  // 使用提供的用户名或默认用户名
-  const effectiveUsername = username || defaultUsername;
+  const effectiveUsername = username || config.username;
 
   const fetchData = async (page = 1) => {
     setLoading(true);
-    const params = new URLSearchParams();
-    params.append('platform', platform);
-    params.append('page', page.toString());
     
-    if (effectiveUsername) {
-      params.append('username', effectiveUsername);
+    if (!platform || !Object.values(GitPlatform).includes(platform)) {
+      setError('无效的平台参数');
+      setLoading(false);
+      return;
     }
-    
-    if (organization) {
-      params.append('organization', organization);
-    }
-    
-    const url = `/api/git-projects?${params.toString()}`;
     
     try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`获取数据失败: ${response.status} ${response.statusText}`);
+      const baseUrl = new URL('/api/git-projects', window.location.origin);
+      
+      baseUrl.searchParams.append('platform', platform);
+      baseUrl.searchParams.append('page', page.toString());
+      baseUrl.searchParams.append('config', JSON.stringify(config));
+      
+      if (effectiveUsername) {
+        baseUrl.searchParams.append('username', effectiveUsername);
       }
+      
+      if (organization) {
+        baseUrl.searchParams.append('organization', organization);
+      }
+      
+      const response = await fetch(baseUrl.toString(), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`请求失败: ${response.status} ${response.statusText}\n${JSON.stringify(errorData, null, 2)}`);
+      }
+      
       const data = await response.json();
       setProjects(data.projects);
       setPagination(data.pagination);
     } catch (err) {
+      console.error('请求错误:', err);
       setError(err instanceof Error ? err.message : '未知错误');
     } finally {
       setLoading(false);

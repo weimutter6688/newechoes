@@ -2,9 +2,12 @@ import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import worldData from '@/assets/world.zh.json';
 import chinaData from '@/assets/china.json';
-import { VISITED_PLACES } from '@/consts';
 
-const WorldHeatmap: React.FC = () => {
+interface WorldHeatmapProps {
+  visitedPlaces: string[];
+}
+
+const WorldHeatmap: React.FC<WorldHeatmapProps> = ({ visitedPlaces }) => {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -12,7 +15,6 @@ const WorldHeatmap: React.FC = () => {
 
     const chart = echarts.init(chartRef.current);
 
-    // 合并中国省份到世界地图
     const mergedWorldData = {
       ...worldData,
       features: worldData.features.map((feature: any) => {
@@ -21,13 +23,12 @@ const WorldHeatmap: React.FC = () => {
             ...feature,
             geometry: {
               type: 'MultiPolygon',
-              coordinates: []  // 清空中国的轮廓
+              coordinates: []
             }
           };
         }
         return feature;
       }).concat(
-        // 添加中国省份数据
         chinaData.features.map((feature: any) => ({
           ...feature,
           properties: {
@@ -49,7 +50,7 @@ const WorldHeatmap: React.FC = () => {
       tooltip: {
         trigger: 'item',
         formatter: ({name}: {name: string}) => {
-          const visited = VISITED_PLACES.includes(name);
+          const visited = visitedPlaces.includes(name);
           return `${name}<br/>${visited ? '✓ 已去过' : '尚未去过'}`;
         }
       },
@@ -85,7 +86,7 @@ const WorldHeatmap: React.FC = () => {
         },
         data: mergedWorldData.features.map((feature: any) => ({
           name: feature.properties.name,
-          value: VISITED_PLACES.includes(feature.properties.name) ? 1 : 0
+          value: visitedPlaces.includes(feature.properties.name) ? 1 : 0
         })),
         nameProperty: 'name'
       }]
@@ -103,7 +104,7 @@ const WorldHeatmap: React.FC = () => {
         chart.resize();
       });
     };
-  }, []);
+  }, [visitedPlaces]);
 
   return <div ref={chartRef} style={{ width: '100%', height: '600px' }} />;
 };

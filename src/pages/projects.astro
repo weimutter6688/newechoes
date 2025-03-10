@@ -1,22 +1,24 @@
 ---
 import Layout from '@/components/Layout.astro';
-import { GitPlatform } from '@/components/GitProjectCollection';
 import GitProjectCollection from '@/components/GitProjectCollection';
+import { GitPlatform, type GitConfig } from '@/components/GitProjectCollection';
+
+const giteaConfig: GitConfig = {
+  username: 'lsy',
+  url: 'https://g.lsy22.com',
+};
 ---
 
 <Layout title="项目 | echoes">
   <main class="container mx-auto px-4 py-8">
-    
     <div class="space-y-12">
-      <!-- Gitea 项目集合 -->
       <GitProjectCollection 
-        platform={GitPlatform.GITEA} 
+        platform={GitPlatform.GITEA}
         username="lsy"
         title="Gitea 个人项目"
+        config={giteaConfig}
         client:load
       />
-      
-
     </div>
   </main>
 </Layout>

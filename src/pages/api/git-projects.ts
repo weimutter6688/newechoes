@@ -1,8 +1,7 @@
-import type { APIRoute } from 'astro';
+import type { APIContext } from 'astro';
 import { Octokit } from 'octokit';
 import fetch from 'node-fetch';
-import { GIT_CONFIG } from '@/consts';
-import { GitPlatform, GIT_PLATFORM_CONFIG } from '@/components/GitProjectCollection';
+import { GitPlatform } from '@/components/GitProjectCollection';
 
 interface GitProject {
   name: string;
@@ -24,75 +23,108 @@ interface Pagination {
   hasPrev: boolean;
 }
 
-export const GET: APIRoute = async ({ request }) => {
-  const url = new URL(request.url);
-  const platformParam = url.searchParams.get('platform') || 'github';
-  const platform = platformParam as GitPlatform;
-  const page = parseInt(url.searchParams.get('page') || '1');
-  const username = url.searchParams.get('username') || '';
-  const organization = url.searchParams.get('organization') || '';
-  
+export const prerender = false;
+
+export async function GET({ request }: APIContext) {
   try {
+    const url = new URL(request.url);
+    
+    const headers = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Content-Type': 'application/json'
+    };
+
+    const platformParam = url.searchParams.get('platform');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const username = url.searchParams.get('username') || '';
+    const organization = url.searchParams.get('organization') || '';
+    const configStr = url.searchParams.get('config');
+
+    if (!platformParam) {
+      return new Response(JSON.stringify({ 
+        error: '无效的平台参数',
+        receivedPlatform: platformParam,
+      }), { status: 400, headers });
+    }
+
+    if (!configStr) {
+      return new Response(JSON.stringify({ 
+        error: '缺少配置参数'
+      }), { status: 400, headers });
+    }
+
+    const config = JSON.parse(configStr);
+
+    if (!Object.values(GitPlatform).includes(platformParam as GitPlatform)) {
+      return new Response(JSON.stringify({ 
+        error: '无效的平台参数',
+        receivedPlatform: platformParam,
+      }), { status: 400, headers });
+    }
+    
+    const platform = platformParam as GitPlatform;
     let projects: GitProject[] = [];
     let pagination: Pagination = { current: page, total: 1, hasNext: false, hasPrev: page > 1 };
     
     if (platform === GitPlatform.GITHUB) {
-      const result = await fetchGithubProjects(username, organization, page);
+      const result = await fetchGithubProjects(username, organization, page, config);
       projects = result.projects;
       pagination = result.pagination;
     } else if (platform === GitPlatform.GITEA) {
-      const result = await fetchGiteaProjects(username, organization, page);
+      const result = await fetchGiteaProjects(username, organization, page, config);
       projects = result.projects;
       pagination = result.pagination;
     } else if (platform === GitPlatform.GITEE) {
-      try {
-        const result = await fetchGiteeProjects(username, organization, page);
-        projects = result.projects;
-        pagination = result.pagination;
-      } catch (giteeError) {
-        // 返回空数据而不是抛出错误
-      }
+      const result = await fetchGiteeProjects(username, organization, page, config);
+      projects = result.projects;
+      pagination = result.pagination;
     }
     
     return new Response(JSON.stringify({ projects, pagination }), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers
     });
   } catch (error) {
-    let errorMessage = '获取数据失败';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-    
     return new Response(JSON.stringify({ 
-      error: errorMessage,
-      platform
+      error: '处理请求错误',
+      message: error instanceof Error ? error.message : '未知错误'
     }), {
       status: 500,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
       }
     });
   }
-};
+}
 
-async function fetchGithubProjects(username: string, organization: string, page: number) {
-  // 添加重试逻辑
+export function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
+}
+
+async function fetchGithubProjects(username: string, organization: string, page: number, config: any) {
   const maxRetries = 3;
   let retryCount = 0;
   
   while (retryCount < maxRetries) {
     try {
       const octokit = new Octokit({
-        auth: GIT_PLATFORM_CONFIG.platforms[GitPlatform.GITHUB].token || process.env.GITHUB_TOKEN,
+        auth: process.env.GITHUB_TOKEN,
         request: {
-          timeout: 10000 // 增加超时时间到10秒
+          timeout: 10000
         }
       });
       
-      const perPage = GIT_CONFIG.perPage;
+      const perPage = config.perPage || 10;
       let repos;
       
       if (organization) {
@@ -114,10 +146,8 @@ async function fetchGithubProjects(username: string, organization: string, page:
         });
         repos = data;
       } else {
-        // 如果没有指定用户或组织，使用默认用户名
-        const defaultUsername = GIT_PLATFORM_CONFIG.platforms[GitPlatform.GITHUB].username;
         const { data } = await octokit.request('GET /users/{username}/repos', {
-          username: defaultUsername,
+          username: config.username,
           per_page: perPage,
           page: page,
           sort: 'updated',
@@ -126,20 +156,16 @@ async function fetchGithubProjects(username: string, organization: string, page:
         repos = data;
       }
       
-      // 替换获取分页信息的代码
       let hasNext = false;
       let hasPrev = page > 1;
       let totalPages = 1;
       
-      // 使用响应头中的 Link 信息
       if (repos.length === perPage) {
         hasNext = true;
         totalPages = page + 1;
       }
       
-      // 或者使用 GitHub API 的 repository_count 估算
       if (repos.length > 0 && repos[0].owner) {
-        // 简单估算：如果有结果且等于每页数量，则可能有下一页
         hasNext = repos.length === perPage;
         totalPages = hasNext ? page + 1 : page;
       }
@@ -173,12 +199,10 @@ async function fetchGithubProjects(username: string, organization: string, page:
         throw error;
       }
       
-      // 等待一段时间后重试
       await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
     }
   }
   
-  // 添加默认返回值，防止 undefined
   return {
     projects: [],
     pagination: {
@@ -190,17 +214,10 @@ async function fetchGithubProjects(username: string, organization: string, page:
   };
 }
 
-async function fetchGiteaProjects(username: string, organization: string, page: number) {
+async function fetchGiteaProjects(username: string, organization: string, page: number, config: any) {
   try {
-    // 使用consts中的配置
-    const perPage = GIT_CONFIG.perPage;
-    const platformConfig = GIT_PLATFORM_CONFIG.platforms[GitPlatform.GITEA];
-    
-    if (!platformConfig) {
-      throw new Error('Gitea 平台配置不存在');
-    }
-    
-    const giteaUrl = platformConfig.url;
+    const perPage = config.perPage || 10;
+    const giteaUrl = config.url;
     
     if (!giteaUrl) {
       throw new Error('Gitea URL 不存在');
@@ -212,16 +229,13 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
     } else if (username) {
       apiUrl = `${giteaUrl}/api/v1/users/${username}/repos?page=${page}&per_page=${perPage}`;
     } else {
-      const defaultUsername = GIT_PLATFORM_CONFIG.platforms[GitPlatform.GITEA].username;
-      apiUrl = `${giteaUrl}/api/v1/users/${defaultUsername}/repos?page=${page}&per_page=${perPage}`;
+      apiUrl = `${giteaUrl}/api/v1/users/${config.username}/repos?page=${page}&per_page=${perPage}`;
     }
     
     const response = await fetch(apiUrl, {
       headers: {
         'Accept': 'application/json',
-        ...(GIT_PLATFORM_CONFIG.platforms[GitPlatform.GITEA].token ? 
-          { 'Authorization': `token ${GIT_PLATFORM_CONFIG.platforms[GitPlatform.GITEA].token}` } : 
-          {})
+        ...(config.token ? { 'Authorization': `token ${config.token}` } : {})
       }
     });
     
@@ -231,10 +245,8 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
     
     const data = await response.json() as any;
     
-    // Gitea API 返回的是数组
     const repos = Array.isArray(data) ? data : [];
     
-    // 获取分页信息
     const totalCount = parseInt(response.headers.get('X-Total-Count') || '0');
     const totalPages = Math.ceil(totalCount / perPage) || 1;
     
@@ -261,7 +273,6 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
       }
     };
   } catch (error) {
-    // 返回空数据而不是抛出错误
     return {
       projects: [],
       pagination: {
@@ -274,19 +285,16 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
   }
 }
 
-async function fetchGiteeProjects(username: string, organization: string, page: number) {
+async function fetchGiteeProjects(username: string, organization: string, page: number, config: any) {
   try {
-    // 使用consts中的配置
-    const perPage = GIT_CONFIG.perPage;
+    const perPage = config.perPage || 10;
     
-    // 确定用户名
-    const giteeUsername = username || GIT_CONFIG.gitee.username;
+    const giteeUsername = username || config.username;
     
     if (!giteeUsername) {
       throw new Error('Gitee 用户名未配置');
     }
     
-    // 构建API URL
     let apiUrl;
     if (organization) {
       apiUrl = `https://gitee.com/api/v5/orgs/${organization}/repos?page=${page}&per_page=${perPage}&sort=updated&direction=desc`;
@@ -294,9 +302,8 @@ async function fetchGiteeProjects(username: string, organization: string, page: 
       apiUrl = `https://gitee.com/api/v5/users/${giteeUsername}/repos?page=${page}&per_page=${perPage}&sort=updated&direction=desc`;
     }
     
-    // 添加访问令牌（如果有）
-    if (GIT_CONFIG.gitee.token) {
-      apiUrl += `&access_token=${GIT_CONFIG.gitee.token}`;
+    if (config.token) {
+      apiUrl += `&access_token=${config.token}`;
     }
     
     const response = await fetch(apiUrl);
@@ -307,7 +314,6 @@ async function fetchGiteeProjects(username: string, organization: string, page: 
     
     const data = await response.json() as any[];
     
-    // 转换数据格式
     const projects: GitProject[] = data.map(repo => ({
       name: repo.name || '',
       description: repo.description || '',
@@ -321,7 +327,6 @@ async function fetchGiteeProjects(username: string, organization: string, page: 
       platform: GitPlatform.GITEE
     }));
     
-    // 获取分页信息
     const totalCount = parseInt(response.headers.get('total_count') || '0');
     const totalPages = Math.ceil(totalCount / perPage) || 1;
     
@@ -335,7 +340,6 @@ async function fetchGiteeProjects(username: string, organization: string, page: 
       }
     };
   } catch (error) {
-    // 返回空结果
     return {
       projects: [],
       pagination: {

@@ -18,12 +18,6 @@ export const GET: APIRoute = async ({ request }) => {
   // 获取所有文章
   const articles = await getCollection('articles');
   
-  // 打印所有文章的ID，用于调试
-  console.log('所有文章的ID:');
-  articles.forEach(article => {
-    console.log(`- ${article.id}`);
-  });
-  
   // 根据条件过滤文章
   let filteredArticles = articles;
   
@@ -37,17 +31,10 @@ export const GET: APIRoute = async ({ request }) => {
   // 如果有路径过滤，直接使用文章ID来判断
   if (path) {
     const normalizedPath = path.toLowerCase();
-    console.log('当前过滤路径:', normalizedPath);
-    
     filteredArticles = filteredArticles.filter(article => {
       const articlePath = article.id.split('/');
-      console.log('处理文章:', article.id, '分割后:', articlePath);
-      
-      // 检查文章路径的每一部分
       return article.id.toLowerCase().includes(normalizedPath);
     });
-    
-    console.log('过滤后的文章数量:', filteredArticles.length);
   }
   
   // 按日期排序（最新的在前面）

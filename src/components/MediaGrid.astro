@@ -2,9 +2,10 @@
 interface Props {
   type: 'movie' | 'book';
   title: string;
+  doubanId: string;
 }
 
-const { type, title } = Astro.props;
+const { type, title, doubanId } = Astro.props;
 ---
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -24,7 +25,7 @@ const { type, title } = Astro.props;
   </div>
 </div>
 
-<script is:inline define:vars={{ type }}>
+<script is:inline define:vars={{ type, doubanId }}>
 
   let currentPage = 1;
   let isLoading = false;
@@ -41,7 +42,7 @@ const { type, title } = Astro.props;
     
     const start = (page - 1) * itemsPerPage;
     try {
-      const response = await fetch(`/api/douban?type=${type}&start=${start}`);
+      const response = await fetch(`/api/douban?type=${type}&start=${start}&doubanId=${doubanId}`);
       if (!response.ok) {
         throw new Error(`获取${type === 'movie' ? '电影' : '图书'}数据失败`);
       }

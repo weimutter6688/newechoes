@@ -63,32 +63,6 @@ export function getSpecialPath(originalPath: string): string {
   return originalPath;
 }
 
-// 辅助函数：标准化文件名
-function normalizeFileName(fileName: string): string {
-  // 先转换为小写
-  let normalized = fileName.toLowerCase();
-  
-  // 保存括号中的内容
-  const bracketContent = normalized.match(/[（(](.*?)[）)]/)?.[1] || '';
-  
-  // 标准化处理
-  normalized = normalized
-    .replace(/[（(].*?[）)]/g, '') // 移除括号及其内容
-    .replace(/[【】\[\]]/g, '')    // 移除方括号
-    .replace(/[—–]/g, '-')        // 统一全角横线为半角
-    .replace(/\s+/g, '-')         // 空格转换为连字符
-    .replace(/[.:;,'"!?`]/g, '')  // 移除标点符号
-    .replace(/-+/g, '-')          // 合并多个连字符
-    .replace(/^-|-$/g, '');       // 移除首尾连字符
-    
-  // 如果括号中有内容，将其添加回去
-  if (bracketContent) {
-    normalized = `${normalized}-${bracketContent}`;
-  }
-  
-  return normalized;
-}
-
 // 3. 定义目录结构处理函数
 async function getContentStructure(): Promise<ContentStructure> {
   // 获取所有文章
@@ -101,7 +75,6 @@ async function getContentStructure(): Promise<ContentStructure> {
   // 处理每个文章路径
   for (const articlePath of articlePaths) {
     const parts = articlePath.split('/');
-    const fileName = parts[parts.length - 1];
     const dirPath = parts.slice(0, -1);
     
     // 为每一级目录创建或更新节点

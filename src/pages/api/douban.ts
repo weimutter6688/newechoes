@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { load } from 'cheerio';
-import { DOUBAN_ID } from '@/consts';
 
 // 添加服务器渲染标记
 export const prerender = false;
@@ -9,13 +8,21 @@ export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
   const type = url.searchParams.get('type') || 'movie';
   const start = parseInt(url.searchParams.get('start') || '0');
+  const doubanId = url.searchParams.get('doubanId');  // 从查询参数获取 doubanId
   
+  if (!doubanId) {
+    return new Response(JSON.stringify({ error: '缺少豆瓣ID' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   try {
     let doubanUrl = '';
     if (type === 'book') {
-      doubanUrl = `https://book.douban.com/people/${DOUBAN_ID}/collect?start=${start}&sort=time&rating=all&filter=all&mode=grid`;
+      doubanUrl = `https://book.douban.com/people/${doubanId}/collect?start=${start}&sort=time&rating=all&filter=all&mode=grid`;
     } else {
-      doubanUrl = `https://movie.douban.com/people/${DOUBAN_ID}/collect?start=${start}&sort=time&rating=all&filter=all&mode=grid`;
+      doubanUrl = `https://movie.douban.com/people/${doubanId}/collect?start=${start}&sort=time&rating=all&filter=all&mode=grid`;
     }
 
     const response = await fetch(doubanUrl, {
