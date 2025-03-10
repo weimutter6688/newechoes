@@ -66,21 +66,28 @@ const { props } = Astro;
 
 // 解析路径参数
 const pathParts = (Astro.params.path as string | undefined)?.split('/') || [];
+
+// 初始化变量
 let path = '';
 let tag = '';
 let view = 'grid';
 
 if (pathParts[0] === 'tag' && pathParts.length >= 2) {
-  // 标签路径
+  // 标签路径处理
   tag = pathParts[1];
   view = pathParts[2] || 'grid';
-} else if (['grid', 'timeline'].includes(pathParts[pathParts.length - 1])) {
-  // 视图路径
-  view = pathParts.pop() || 'grid';
-  path = pathParts.join('/');
 } else {
-  // 普通目录路径
-  path = Astro.params.path || '';
+  // 处理普通路径和视图
+  const lastPart = pathParts[pathParts.length - 1];
+  
+  if (['grid', 'timeline'].includes(lastPart)) {
+    // 如果最后一部分是视图类型，则移除它并设置视图
+    view = lastPart;
+    pathParts.pop();
+  }
+  
+  // 剩余的部分都作为路径
+  path = pathParts.join('/');
 }
 
 // 合并属性
