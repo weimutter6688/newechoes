@@ -5,6 +5,7 @@ tags: []
 ---
 
 ## 1. 创建自动刷新脚本
+
 在项目根目录创建一个文件名为 `RefreshCDN.py`。修改下列代码中的密钥和域名为你自己的信息。
 
 ```python
@@ -61,6 +62,7 @@ else:
 ```
 
 ## 2. 创建 GitHub Actions 脚本
+
 在项目根目录创建 `.github/workflows` 目录（如果还没有的话），并在该目录下新建 `RefreshCDN.yml`。
 
 ```yaml

@@ -18,6 +18,7 @@ tags: []
 (1) SDK Platform Tools下载后，在"platform-tools"路径下可以看到三个adb相关的文件。现在需要将这个路径添加到系统环境变量中。
 
 (2) 添加环境变量：
+
 - windows10: 打开我的电脑——高级系统设置——系统属性——高级——环境变量——编辑Path，将步骤3个文件所在路径添加到Path变量值中。最后点击"确定"。
 - windows7: 右击我的电脑——属性——高级系统设置——高级——环境变量——编辑Path
 
@@ -27,7 +28,6 @@ tags: []
 
 去谷歌中国开发者网站上下载oem usb驱动程序,并在设备管理器选择正确的驱动程序
 驱动程序：[https://developer.android.google.cn/studio/run/oem-usb?hl=zh-cn][3]
-
 
 [1]: https://developer.android.google.cn/studio/releases/platform-tools?hl=en
 [2]: https://lsy22.lanzoui.com/iFIUqsjzyvc

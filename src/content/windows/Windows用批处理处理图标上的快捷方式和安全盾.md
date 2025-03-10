@@ -8,14 +8,14 @@ tags: []
 
 1. 打开记事本或其他文本编辑器，将下面这段代码复制粘贴到文本编辑器中。
 
-```batch
-@echo off
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /d "%systemroot%\system32\imageres.dll,197" /t reg_sz /f
-taskkill /f /im explorer.exe
-attrib -s -r -h %userprofile%\AppData\Local\IconCache.db
-del %userprofile%\AppData\Local\IconCache.db
-start explorer.exe
-```
+    ```batch
+    @echo off
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /d "%systemroot%\system32\imageres.dll,197" /t reg_sz /f
+    taskkill /f /im explorer.exe
+    attrib -s -r -h %userprofile%\AppData\Local\IconCache.db
+    del %userprofile%\AppData\Local\IconCache.db
+    start explorer.exe
+    ```
 
 2. 将文本编辑器中的代码另存为.bat文件，例如 remove_shortcut.bat，保存在桌面上。
 
@@ -29,15 +29,15 @@ start explorer.exe
 
 1. 打开记事本或其他文本编辑器，将下面这段代码复制粘贴到文本编辑器中。
 
-```batch
-@echo off
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /d "%systemroot%\system32\imageres.dll,197" /t reg_sz /f
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 77 /d "%systemroot%\system32\imageres.dll,197" /t reg_sz /f
-taskkill /f /im explorer.exe
-attrib -s -r -h %userprofile%\AppData\Local\IconCache.db
-del %userprofile%\AppData\Local\IconCache.db
-start explorer.exe
-```
+    ```batch
+    @echo off
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /d "%systemroot%\system32\imageres.dll,197" /t reg_sz /f
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 77 /d "%systemroot%\system32\imageres.dll,197" /t reg_sz /f
+    taskkill /f /im explorer.exe
+    attrib -s -r -h %userprofile%\AppData\Local\IconCache.db
+    del %userprofile%\AppData\Local\IconCache.db
+    start explorer.exe
+    ```
 
 2. 将文本编辑器中的代码另存为.bat文件，例如 remove_security.bat，保存在桌面上。
 

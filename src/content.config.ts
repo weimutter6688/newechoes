@@ -45,7 +45,7 @@ export function getBasename(filePath: string): string {
 export function getDirPath(filePath: string, basePath = './src/content'): string {
   const basename = getBasename(filePath);
   const relativePath = getRelativePath(filePath, basePath);
-  return relativePath.replace(`${basename}.md`, '').replace(/\/$/, '');
+  return relativePath.replace(`${basename}.(md|mdx)`, '').replace(/\/$/, '');
 }
 
 // 辅助函数：获取特殊文件路径
@@ -154,7 +154,7 @@ async function getContentStructure(): Promise<ContentStructure> {
 // 4. 定义你的集合
 const articles = defineCollection({
   loader: glob({ 
-    pattern: "**/*.md", 
+    pattern: "**/*.{md,mdx}", 
     base: "./src/content"
   }),
   schema: z.object({

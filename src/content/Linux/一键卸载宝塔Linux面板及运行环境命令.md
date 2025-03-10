@@ -11,6 +11,7 @@ wget http://download.bt.cn/install/bt-uninstall.sh
 ```
 
 执行脚本
+
 ```bash
 sh bt-uninstall.sh
 ```

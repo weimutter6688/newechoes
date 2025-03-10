@@ -9,6 +9,7 @@ tags: ["x-ui"]
 GitHub项目地址：[https://github.com/FranzKafkaYu/x-ui](https://github.com/FranzKafkaYu/x-ui)
 
 1. 复制粘贴以下代码，并运行：
+
     ```bash
     bash <(curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/master/install.sh)
     ```
@@ -24,13 +25,14 @@ GitHub项目地址：[https://github.com/FranzKafkaYu/x-ui](https://github.com/F
 系统状态 - xray 状态 - 切换版本 - 切换为最新版本
 
 配置节点：
+
 - 入站列表 - 添加入站
-    - 协议：`vless`
-    - 端口：`443`
-    - reality：`开启`
-    - 添加用户：+
-        - flow选择xtls-rprx-vision
-        - 其他默认
+  - 协议：`vless`
+  - 端口：`443`
+  - reality：`开启`
+  - 添加用户：+
+    - flow选择xtls-rprx-vision
+    - 其他默认
 
 ## 三、使用
 

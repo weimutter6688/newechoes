@@ -23,4 +23,5 @@ tags: []
     Header("Location: $dir/$image");
 ?>
 ```
+
 现在，你可以通过访问`http://your_website.com/api.php` 来使用这个随机图片API了。每次访问这个URL时，它都会随机选择一个图片文件并重定向到该图片的URL。

@@ -56,10 +56,10 @@ theme: 主题名字 # 主题名字，和 themes 文件夹下的一致
 1. 将 hugo 复制到站点文件夹
 2. 打开 PowerShell 进入站点文件夹
 3. 查看 Hugo 版本号
-
-```powershell
-./hugo version
-```
+  
+  ```powershell
+  ./hugo version
+  ```
 
 4. 设置 Hugo 版本号
 

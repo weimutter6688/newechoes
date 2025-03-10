@@ -6,7 +6,7 @@ tags: ["Docker-compose"]
 
 ## `docker-compose.yml` 文件配置
 
-### 替换说明：
+### 替换说明
 
 * 将 `/var/www/siyuan/` 替换为你的实际物理路径。
 * 将 `Password` 替换为你的访问密码。
@@ -30,7 +30,7 @@ services:
 
 ## 反向代理配置
 
-### 替换说明：
+### Nginx配置替换说明
 
 * 将 `your_domain.com` 替换为你自己的域名。
 * 将 `path` 替换为你的SSL证书的实际路径。

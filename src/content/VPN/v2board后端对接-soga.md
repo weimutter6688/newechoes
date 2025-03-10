@@ -7,6 +7,7 @@ tags: ["v2board"]
 确保v2board版本在1.2.5及以上
 
 ## 一、安装与更新
+
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/sprov065/soga/master/install.sh)
 ```
@@ -16,6 +17,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/sprov065/soga/master/install.s
 v2ray 节点需要进行时间同步，时间若与客户端相差太大则无法连接。
 
 ### CentOS 7
+
 ```bash
 yum install -y ntp
 systemctl enable ntpd
@@ -24,6 +26,7 @@ systemctl restart ntpd
 ```
 
 ### Debian 9 / Ubuntu 16
+
 ```bash
 apt-get install -y ntp
 systemctl enable ntp
@@ -31,6 +34,7 @@ systemctl restart ntp
 ```
 
 ### 或者（时间同步为上海）
+
 ```bash
 rm -rf /etc/localtime
 ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -40,7 +44,9 @@ ntpdate time.nist.gov
 ## 三、面板节点配置
 
 ### 添加节点
+
 在面板后台 > 节点管理 > 添加节点：
+
 - 节点名称：随便填写
 - 权限组：随便填写
 - 节点地址：填v2borad的域名或ip
@@ -48,6 +54,7 @@ ntpdate time.nist.gov
 - 传输协议：选择websocket
 
 ### 配置协议
+
 ```json
 {
   "lsy": "/"
@@ -57,20 +64,25 @@ ntpdate time.nist.gov
 ## 四、配置 soga
 
 ### 查看配置
+
 ```bash
 soga config
 ```
 
 ### 自动配置
+
 可以一行填写任意数量的配置信息，示例：
+
 ```bash
 soga config type=v2board server_type=v2ray
 ```
 
 ### 编辑配置文件
+
 配置文件位置：`/etc/soga/soga.conf`
 
 基础配置示例：
+
 ```ini
 type=v2board       ## 对接的面板类型，可选SSpanel, V2board, NewV2board, PMpanel, Proxypanel, V2RaySocks
 server_type=v2ray  ## 对接的节点类型，可选V2ray, Shadowsocks, Trojan
@@ -98,10 +110,13 @@ default_dns=8.8.8.8,1.1.1.1  ## 配置默认dns，可在此配置流媒体解锁
 ```
 
 ## 五、启动 soga
+
 ```bash
 soga start
 ```
+
 或者
+
 ```bash
 soga
 ```

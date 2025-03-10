@@ -28,7 +28,7 @@ tags: []
 3. 选择适合您系统架构的最新版本的 WSA 安装包（通常为 `.Msixbundle` 后缀），并下载。
 
    > 注意：忽略带有 BlockMap 后缀的文件。
->
+
 4. 也可访问 [MustardChef 的 GitHub 页面](https://github.com/MustardChef/WSABuilds) 下载经过修改的 WSA 安装包。
 
 ### 二、安装 WSA 环境
@@ -89,6 +89,7 @@ wsl --set-default-version 2
         ```bash
         wsl --list
         ```
+
     2. 切换root用户
 
         ```bash
@@ -109,6 +110,7 @@ wsl --set-default-version 2
   [automount]
   enabled = false
   ```
+
 * **解决无法定位 package screen 的问题**：
   在 Linux 分发版中运行 `apt-get update` 来更新软件包列表。
 * **WSL 卸载**：
@@ -117,9 +119,11 @@ wsl --set-default-version 2
   ```bash
   wsl --unregister 指定的Linux分发版
   ```
+
 * **解决 WSLRegisterDistribution 错误**：
   在 PowerShell 中运行
 
   ```bash
   Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
   ```
+  

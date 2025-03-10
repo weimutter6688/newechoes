@@ -5,11 +5,14 @@ tags: []
 ---
 
 ## 一. 安装 Termux
+
 [官方版本](https://termux.dev/cn/)
 [ZeroTermux (魔改)](https://github.com/hanxinhao000/ZeroTermux)
 
 ## 二. 安装 Linux
+
 1. 下载容器脚本并使用
+
     ```bash
     curl -LO https://gitee.com/mo2/linux/raw/2/2.awk
     awk -f 2.awk

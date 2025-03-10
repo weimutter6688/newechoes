@@ -1,8 +1,11 @@
 ---
-title: "markdown使用教程"
+title: "MDX使用教程"
 date: 2023-03-03
 tags: []
 ---
+
+## 1. Markdown 语法部分
+
 ### 1.1 标题语法
 
 ```markdown
@@ -177,11 +180,11 @@ function greet(user: User): string {
 #### 1.7.1 链接
 
 ```markdown
-[Markdown 官方文档](https://www.markdownguide.org)
+[MDX 官方文档](https://mdxjs.com)
 [相对路径链接](../path/to/file.md)
 ```
 
-[Markdown 官方文档](https://www.markdownguide.org)
+[MDX 官方文档](https://mdxjs.com)
 [相对路径链接](../path/to/file.md)
 
 #### 1.7.2 图片
@@ -194,52 +197,34 @@ function greet(user: User): string {
 
 ```markdown
 ---
-或
-***
-或
-___
 ```
 
 ---
 
-### 1.9 脚注
+## 2. HTML/JSX 语法部分
 
-```markdown
-这里有一个脚注[^1]，这里有另一个脚注[^2]。
+### 2.1 HTML 标签
 
-[^1]: 这是第一个脚注的内容。
-[^2]: 这是第二个脚注的内容。
+#### 2.1.1 下划线文本
+
+```mdx
+<u>这是下划线文本</u>
 ```
 
-这里有一个脚注[^1]，这里有另一个脚注[^2]。
+<u>这是下划线文本</u>
 
-[^1]: 这是第一个脚注的内容。
-[^2]: 这是第二个脚注的内容。
+#### 2.1.2 收纳语法
 
-### 1.10 转义字符
-
-```markdown
-\* 这不是斜体 \*
-\` 这不是代码 \`
-\[ 这不是链接 \]
-```
-
-\* 这不是斜体 \*
-\` 这不是代码 \`
-\[ 这不是链接 \]
-
-### 1.11 收纳语法
-
-```markdown
+```mdx
 <details>
 <summary>点击展开</summary>
 
-> 这里是被收纳的内容。
-> 可以包含任何 Markdown 格式的内容。
-> 
-> - 列表项1
-> - 列表项2
-> - 列表项3
+这里是被收纳的内容。
+可以包含任何 MDX 格式的内容。
+
+- 列表项1
+- 列表项2
+- 列表项3
 
 </details>
 ```
@@ -247,11 +232,59 @@ ___
 <details>
 <summary>点击展开</summary>
 
-> 这里是被收纳的内容。
-> 可以包含任何 Markdown 格式的内容。
-> 
-> - 列表项1
-> - 列表项2
-> - 列表项3
+这里是被收纳的内容。
+可以包含任何 MDX 格式的内容。
+
+- 列表项1
+- 列表项2
+- 列表项3
 
 </details>
+
+### 2.2 React 组件使用
+
+```mdx
+import { Button } from './Button'
+
+<Button variant="primary">
+  点击我
+</Button>
+```
+
+### 2.3 导出和使用变量
+
+```mdx
+export const myVariable = "Hello MDX!"
+
+# {myVariable}
+```
+
+### 2.4 使用 JavaScript 表达式
+
+```mdx
+{new Date().getFullYear()}
+
+{['React', 'Vue', 'Angular'].map(framework => (
+  <li key={framework}>{framework}</li>
+))}
+```
+
+### 2.5 组件属性传递
+
+```mdx
+<Card
+  title="我的卡片"
+  description="这是一个示例卡片"
+  image="path/to/image.jpg"
+>
+  这里是卡片内容
+</Card>
+```
+
+### 2.6 导入其他 MDX 文件
+
+```mdx
+import OtherContent from './other-content.mdx'
+
+<OtherContent />
+```

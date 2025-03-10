@@ -9,21 +9,29 @@ tags: []
 ### 系统：Debian 12
 
 ### 第一步：绑定域名
+
 1. 修改 hosts 配置
+
     ```bash
     vim /etc/hosts
     ```
+
    添加需要绑定的域名，格式如下：
+
     ```text
     公网IP 域名
     ```
 
 ### 第二步：配置 MySQL 数据库
+
 1. 进入 MySQL
+
     ```bash
     mysql -u root -p
     ```
+
 2. 创建数据库和用户，并授权
+
     ```sql
     CREATE DATABASE typecho_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     CREATE USER 'typecho_user'@'localhost' IDENTIFIED BY 'your_password';
@@ -37,23 +45,32 @@ tags: []
    > 替换密码：your_password
 
 #### 导入备份数据 (如果有)
+
 1. 切换到目标数据库
+
     ```sql
     USE existing_database_name;
     ```
+
    > 替换为现有数据库的名称。
 2. 导入备份数据
+
     ```sql
     SOURCE /path/to/backup_file.sql;
     ```
+
    > 替换为备份文件的路径。
 
 ### 第三步：配置 Nginx
+
 1. 创建 Nginx 网站配置文件
+
     ```bash
     sudo vim /etc/nginx/sites-available/typecho.conf
     ```
+
 2. 添加 Typecho 的反向代理配置信息
+
     ```nginx
     server {
         listen 80;
@@ -104,48 +121,59 @@ tags: []
     ```
 
 3. 创建软链接至 sites-enabled
+
     ```bash
     sudo ln -s "/etc/nginx/sites-available/typecho.conf" "/etc/nginx/sites-enabled"
     ```
 
 4. 重启服务器
+
     ```bash
     nginx -t  # 检查配置文件语法错误
     nginx -s reload  # 重新加载配置文件
     ```
 
 ### 第四步：申请 SSL 证书
+
 1. 手动安装 acme.sh
+
     ```bash
     git clone --depth=1 https://github.com/acmesh-official/acme.sh && cd acme.sh
     ```
+
    或使用国内镜像
+
     ```bash
     git clone --depth=1 https://gitee.com/neilpang/acme.sh && cd acme.sh
     ```
 
 2. 安装 acme.sh
+
     ```bash
     ./acme.sh --install
     ```
 
 3. 注册账号
+
     ```bash
     acme.sh --register-account -m my@example.com
     ```
 
 4. 生成证书
+
     ```bash
     ./acme.sh --issue -d mydomain.com -d www.mydomain.com --webroot /home/wwwroot/mydomain.com/
     ```
 
 5. 配置 SSL 证书和密钥路径
+
     ```nginx
     ssl_certificate /path/to/your_certificate.cer;  # SSL 证书路径
     ssl_certificate_key /path/to/your_certificate.key;  # SSL 证书密钥路径
     ```
 
 6. 重启 Nginx
+
     ```bash
     nginx -t  # 检查配置文件语法错误
     nginx -s reload  # 重新加载配置文件

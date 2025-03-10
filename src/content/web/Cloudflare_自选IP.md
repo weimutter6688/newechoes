@@ -15,6 +15,6 @@ tags: []
 
    我要使用`proxy.example.com`作为Workers域名，且要访问全部内容
 
-    ```
+    ```text
     proxy.example.com/*
     ```

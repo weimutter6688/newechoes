@@ -34,6 +34,7 @@ tags: ["v2board"]
         - 父节点：选择创造好的节点
         - 传输协议：选择websocket
         - 配置协议：
+
           ```json
           {
             "path": "/随便",

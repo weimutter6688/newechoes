@@ -13,16 +13,19 @@ tags: []
     ```bash
     sudo apt-get install python3-venv -y
     ```
+
 2. 创建一个新的虚拟环境：
 
     ```bash
     python3 -m venv "/var/script/venv"
     ```
+
 3. 激活虚拟环境：
 
     ```bash
     source "/var/script/venv/bin/activate"
     ```
+
 4. 安装 Python 库
 
     1. 安装 bypy：
@@ -30,6 +33,7 @@ tags: []
         ```bash
         pip install bypy
         ```
+
     2. 安装 requests：
 
         ```bash
@@ -40,7 +44,7 @@ tags: []
 
 #### 授权登录
 
-##### 运行 `bypy info` 后按照提示进行：
+##### 运行 `bypy info` 后按照提示进行
 
 1. 将提示中的链接粘贴到浏览器中登录。
 2. 输入账号密码登录后授权，获取授权码。
@@ -63,21 +67,25 @@ Github项目地址:[https://github.com/tickstep/aliyunpan](https://github.com/ti
     ```bash
     wget -P "/var/script" https://github.com/tickstep/aliyunpan/releases/download/v0.3.2/aliyunpan-v0.3.2-linux-amd64.zip -O "/var/script/aliyunpan.zip"
     ```
+
 2. 解压工具包
 
     ```bash
     unzip "/var/script/aliyunpan.zip" -d "/var/script"
     ```
+
 3. 删除压缩包
 
     ```bash
     rm "/var/script/aliyunpan.zip"
     ```
+
 4. 重命名工具包名
 
     ```bash
     mv "/var/script/$(ls "/var/script" | grep "aliyunpan")" "/var/script/aliyunpan"
     ```
+
 5. 登录阿里云盘
 
     ```bash
@@ -195,21 +203,21 @@ user=""  # 数据库用户名
 password="" # 数据库密码
 
 for item in ${mysql_arry[@]};do
-	mkdir -p "$item/$year"
-	mysqldump -u $user -p$password ${item} > "${item}_${date_time}.sql"
-	zip "./$item/$year/${item}_${date_time}.zip"  "./${item}_${date_time}.sql"
-	rm "./${item}_${date_time}.sql"
+    mkdir -p "$item/$year"
+    mysqldump -u $user -p$password ${item} > "${item}_${date_time}.sql"
+    zip "./$item/$year/${item}_${date_time}.zip"  "./${item}_${date_time}.sql"
+    rm "./${item}_${date_time}.sql"
 done
 
 for item in ${web_arry[@]};do
-	mkdir -p "./$item/$year"
-	zip -r "./${item}_${date_time}_data.zip" "${web_path}/${item}"
-	if [ -f "./$item/$year/${item}_${date_time}.zip" ];then
-		zip -u "./$item/$year/${item}_${date_time}.zip" "./${item}_${date_time}_data.zip"
-	else
-		 zip "./$item/$year/${item}_${date_time}.zip" "./${item}_${date_time}_data.zip"
-	fi
-	rm "./${item}_${date_time}_data.zip"
+    mkdir -p "./$item/$year"
+    zip -r "./${item}_${date_time}_data.zip" "${web_path}/${item}"
+    if [ -f "./$item/$year/${item}_${date_time}.zip" ];then
+        zip -u "./$item/$year/${item}_${date_time}.zip" "./${item}_${date_time}_data.zip"
+    else
+         zip "./$item/$year/${item}_${date_time}.zip" "./${item}_${date_time}_data.zip"
+    fi
+    rm "./${item}_${date_time}_data.zip"
 done
 ```
 
@@ -221,7 +229,7 @@ chmod +x backups.sh
 
 ## 设置定时任务
 
-1. 编辑 crontab 以自动执行备份脚本：
+1.编辑 crontab 以自动执行备份脚本：
 
 ```bash
 crontab -e
@@ -233,7 +241,7 @@ crontab -e
 0 0 1 * * /var/script/backups.sh  # 每个月的第一天的午夜（00:00）执行
 ```
 
-2. 重启 cron 服务以应用更改：
+2.重启 cron 服务以应用更改：
 
 ```bash
 sudo systemctl restart cron

@@ -47,6 +47,7 @@ tags: ["Docker-compose"]
             echo "date.timezone = PRC"; \
         } > /usr/local/etc/php/conf.d/custom.ini
     ```
+
 2. **Nginx 服务器配置**
 
    文件路径:`./nginx/conf/default.conf`
@@ -78,6 +79,7 @@ tags: ["Docker-compose"]
         }
     }
     ```
+
 3. **Typecho 源代码部署**
 
    创建 `./data` 文件夹，并将 [Typecho](https://github.com/typecho/typecho/releases) 源代码放入此文件夹。
@@ -87,6 +89,7 @@ tags: ["Docker-compose"]
     ```bash
     chmod -R 777 data
     ```
+
 4. **Docker Compose 配置**
 
    路径: `./docker-compose.yml`
@@ -159,6 +162,7 @@ docker compose up -d
   ```text
   因为docker内部网络可以用过容器名访问
   ```
+
 * 数据库用户名: `root`
 * 数据库密码: `typecho`
 * 数据库名: `typecho`
@@ -179,6 +183,7 @@ docker compose up -d
     MYSQL_USER=typecho           # 原有 MySQL 用户名
     MYSQL_PASSWORD=typecho       # 原有 MySQL 用户密码
     ```
+
 4. 进入mysql容器,将数据库赋权给原用户
 
 ### 排版错误

@@ -58,3 +58,4 @@ sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/ins
 * [pip](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/pip): 为 `python` 包管理器 `pip` 提供补全
 * [docker](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker): 为 `docker` 命令添加自动补全支持
 * [docker-compose](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker-compose): 为 `docker-compose` 命令添加自动补全支持
+  

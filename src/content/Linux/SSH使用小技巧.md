@@ -6,23 +6,26 @@ tags: []
 
 ## 更改root密码
 
-> 将<password>更改为所需的密码
+> 将`password`更改为所需的密码
 
 1. 修改密码
 
     ```bash
-    echo root:<password> |sudo chpasswd root
+    echo root:`password` |sudo chpasswd root
     ```
+
 2. 开启root登录
 
     ```bash
     sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config;
     ```
+
 3. 开启密码登录
 
     ```bash
     sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/g' /etc/ssh/sshd_config;
     ```
+
 4. 重启ssh服务
 
     ```bash
@@ -44,12 +47,14 @@ tags: []
     ```bash
     cp "$HOME/.ssh/id_rsa.pub" "$HOME/.ssh/authorized_keys"
     ```
+
 3. 设置公钥权限
 
     ```bash
     chmod 600 "$HOME/.ssh/authorized_keys"
     chmod 700 "$HOME/.ssh"
     ```
+
 4. ssh配置文件
 
    1. 开启密钥登录
@@ -57,11 +62,13 @@ tags: []
        ```bash
        sudo sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
        ```
+
    2. 关闭密码登录
 
        ```bash
        sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/g' /etc/ssh/sshd_config  
        ```
+
 5. 重启sshd服务
 
     ```bash

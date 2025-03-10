@@ -33,15 +33,15 @@ git init
 
 ### 连接代码托管平台
 
-> 你需要添加一个新的远程仓库并将其命名为`github`或其他你喜欢的名称。**任选其一**：
+> 你需要添加一个新的远程仓库并将其命名为`github`或其他你喜欢的名称。**任选其一**
 
-HTTPS URL，命令如下：
+HTTPS URL，命令如下
 
 ```bash
 git remote add github https://<你的 github 用户名>:<你的 github 密码>@github.com/<你的 github 用户名>/<你的仓库名称>.git
 ```
 
-SSH URL，命令可能如下：
+SSH URL，命令可能如下
 
 ```bash
 git remote add gitee git@github.com:<你的 github 用户名>/<你的仓库名称>.git
@@ -65,7 +65,7 @@ git config --global user.name "Your Name"
 
 #### 2. 创建密钥
 
-在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：
+在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key
 
 ```bash
 ssh-keygen -t rsa -C "youremail@example.com"
@@ -78,7 +78,7 @@ ssh-keygen -t rsa -C "youremail@example.com"
 登陆GitHub，打开`Account settings`，`SSH Keys`页面，点`Add SSH Key`，
 填上任意Title，在Key文本框里粘贴`id_rsa.pub`文件的内容
 
-#### 4. 验证远程仓库：
+#### 4. 验证远程仓库
 
 ```bash
 git remote -v
@@ -86,7 +86,7 @@ git remote -v
 
 ## 四、上传本地代码
 
-### 1. 添加工作目录中的所有更改到暂存区：
+### 1. 添加工作目录中的所有更改到暂存区
 
 ```bash
 git add .
@@ -115,31 +115,37 @@ git push github master
   ```bash
   git push <origin> <master>
   ```
+
 * 强制将推送本地分支
 
   ```bash
   git push -f <origin> <master>
   ```
+
 * 拉取
 
   ```bash
   git pull <origin> <master>
   ```
+  
 * 强制将分支的最新内容拉取到本地的分支
 
   ```bash
   git pull --force <origin> <master>
   ```
+
 * 将本地分支重置为远程分支的最新状态
 
   ```bash
   git reset --hard <origin>/<master>
   ```
+
 * 克隆仓库
 
   ```bash
   git clone <url>
   ```
+  
 * 添加所有更改到暂存区
 
   ```bash
@@ -151,46 +157,55 @@ git push github master
   ```bash
   git reset <file1> <file2>
   ```
+  
 * 将文件从缓存区中移除，但物理文件仍然存在
 
   ```bash
   git rm --cached <path>
   ```
+
 * 查看暂存区的内容
 
   ```bash
   git ls-files
   ```
+
 * 提交已暂存的更改
 
   ```bash
   git commit -m "Commit message"
   ```
+
 * 查看分支
 
   ```bash
   git branch
   ```
+
 * 创建并切换到新分支
 
   ```bash
   git checkout -b <new_branch_name>
   ```
+
 * 删除本地分支
 
   ```bash
   git branch -d <branch_name>
   ```
+
 * 添加远程仓库
 
   ```bash
   git remote add <origin> <remote_repository_url>
   ```
+
 * 移除与远程仓库的关联
 
   ```bash
   git remote remove <origin>
   ```
+
 * 版本回退
 
   > HEAD相当与当前、HEAD~1 退回上一个版本、HEAD~2 退回上两个版本，依次类推。
@@ -215,7 +230,7 @@ git push github master
 > 这个警告通常出现在文件的换行符混合使用时，比如在 Windows 系统上使用的 CRLF（\r\n）格式的换行符，而在 Git 中又配置了
 > core.autocrlf 为 true 的情况下。
 
-#### 1. 禁用 core.autocrlf：
+#### 1. 禁用 core.autocrlf
 
 ```bash
 git config --global core.autocrlf false
@@ -223,15 +238,15 @@ git config --global core.autocrlf false
 
 > 这将禁用自动换行符转换，保留文件中原有的换行符。
 
-#### 2. 设置 core.eol：
+#### 2. 设置 core.eol
 
-如果你希望在提交时保持换行符转换，但希望检出时保持原样，你可以尝试设置 core.eol：
+如果你希望在提交时保持换行符转换，但希望检出时保持原样，你可以尝试设置 core.eol
 
 ```bash
 git config --global core.eol lf
 ```
 
-或者：
+或者
 
 ```bash
 git config --global core.eol crlf
@@ -239,7 +254,7 @@ git config --global core.eol crlf
 
 这将设置 Git 使用指定的换行符风格。
 
-#### 3. 手动修复文件：
+#### 3. 手动修复文件
 
 如果只是个别文件出现这个问题，你也可以手动修复，将文件的行尾调整为你希望的格式。
 
@@ -311,7 +326,7 @@ git commit -m "Your commit message"
 
 #### 例如将 Git Bash 的默认工作目录设置为 `D:\data\code\C`
 
-编辑`~/.profile` 或 `~/.bashrc `文件
+编辑`~/.profile` 或 `~/.bashrc`文件
 
 在文件末尾加上
 
@@ -352,4 +367,5 @@ cd d:/data/code
 
     unset env
     ```
+
 3. 再次运行 Git Bash 时，系统将提示您输入密码

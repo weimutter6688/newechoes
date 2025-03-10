@@ -36,7 +36,7 @@ services:
 >
 > 1. `ssl_certificate` : SSL证书路径
 > 2. `ssl_certificate_key` : SSL证书路径
-> 3. `server_name `: 跟你前面配置的domain相同,案例中为`b.lsy22.com`
+> 3. `server_name`: 跟你前面配置的domain相同,案例中为`b.lsy22.com`
 > 4. `proxy_pass` : 运行Vaultwarden的服务器地址和端口，比如本机为127.0.0.1:6666
 
 ```nginx

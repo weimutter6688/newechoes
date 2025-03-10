@@ -6,7 +6,7 @@ tags: ["rust", "webassembly"]
 
 ## 文件结构
 
-```
+```text
 wasm-project/
 │
 ├── Cargo.toml                  # Rust包的配置文件
@@ -33,12 +33,14 @@ wasm-project/
 
 1. **安装Rust**
    确保你已安装Rust环境，可以通过以下命令来确认是否安装成功：
+
     ```bash
     rustc --version
     ```
 
 2. **安装wasm-pack**
    `wasm-pack`用于将Rust代码编译为WebAssembly格式。通过以下命令安装：
+
     ```bash
     cargo install wasm-pack
     ```
@@ -50,12 +52,14 @@ wasm-project/
 
 1. **构建一个新的Rust包**
    在项目目录下创建一个新的Rust库项目：
+
     ```bash
     cargo new --lib wasm
     ```
 
-2. **配置** **​`Cargo.toml`​**
+2. **配置** **`Cargo.toml`**
    修改`Cargo.toml`来添加WebAssembly的依赖和输出配置：
+
     ```toml
     [package]
     name = "wasm"
@@ -69,8 +73,9 @@ wasm-project/
     crate-type = ["cdylib", "rlib"]
     ```
 
-3. **编写Rust文件** **​`src/lib.rs`​**
+3. **编写Rust文件** **`src/lib.rs`**
    使用`wasm-bindgen`库将Rust函数暴露给JavaScript。编写如下代码：
+
     ```rust
     extern crate wasm_bindgen;
     use wasm_bindgen::prelude::*;
@@ -88,27 +93,32 @@ wasm-project/
 
 4. **将Rust代码编译为WebAssembly**
    使用`wasm-pack`进行编译：
+
     ```bash
     wasm-pack build
     ```
+
    编译后的WebAssembly文件将生成在`pkg/`目录下。
 
 ## 三、打包代码
 
 1. **初始化npm项目**
    创建一个`package.json`文件：
+
     ```bash
     npm init -y
     ```
 
 2. **安装Webpack及相关工具**
    安装Webpack及开发服务器，用于打包和本地运行JavaScript与WebAssembly：
+
     ```bash
     npm install --save-dev webpack webpack-cli webpack-dev-server
     ```
 
-3. **编写JavaScript调用代码** **​`src/index.js`​**
+3. **编写JavaScript调用代码** **`src/index.js`**
    在`index.js`中，调用由Rust编译出的WebAssembly模块：
+
     ```javascript
     const js = import("../pkg/wasm");
 
@@ -117,8 +127,9 @@ wasm-project/
     });
     ```
 
-4. **编写Webpack配置文件** **​`webpack.config.js`​**
+4. **编写Webpack配置文件** **`webpack.config.js`**
    该配置文件用于打包项目并支持WebAssembly异步加载：
+
     ```javascript
     module.exports = {
         entry: './src/index.js',
@@ -139,14 +150,16 @@ wasm-project/
 
 5. **打包JavaScript文件**
    使用Webpack打包项目：
+
     ```bash
     npx webpack
     ```
 
 ## 四、运行代码
 
-1. **编写HTML文件** **​`src/index.html`​**
+1. **编写HTML文件** **`src/index.html`**
    在HTML文件中引入打包后的`main.js`：
+
     ```html
     <!DOCTYPE html>
     <html lang="en">

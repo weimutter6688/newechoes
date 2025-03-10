@@ -87,5 +87,3 @@ server {
 3. **备份数据**（可选）：运行`cp -r /root/data/docker_data/alist /root/data/docker_data/alist.bak`
 4. **拉取最新镜像**：运行`docker pull xhofe/alist:latest`
 5. **重新运行安装**：运行`docker run -d --restart=always -v /www/wwwroot/alist:/opt/alist/data -p 7777:5244 --name="alist" xhofe/alist:latest`
-
----

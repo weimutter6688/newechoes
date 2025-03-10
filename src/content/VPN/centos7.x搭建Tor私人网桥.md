@@ -15,11 +15,13 @@ yum install tor -y
 ### 通过python进行编译安装
 
 #### 安装所需依赖软件模块
+
 ```bash
 yum install make automake gcc python-pip python-devel libyaml-devel
 ```
 
 #### 安装 obfs4proxy
+
 ```bash
 pip install obfsproxy
 ```
@@ -27,16 +29,19 @@ pip install obfsproxy
 ### 通过go进行编译安装
 
 #### 下载go的obfs4项目
+
 ```bash
 git clone http://www.github.com/Yawning/obfs4
 ```
 
 #### 进入obfs4目录进行编译
+
 ```bash
 go build -o obfs4proxy/obfs4proxy ./obfs4proxy
 ```
 
 #### 复制bofs4proxy到系统工作目录下
+
 ```bash
 cp ./obfs4proxy/obfs4proxy /usr/bin/obfs4proxy
 ```
@@ -44,6 +49,7 @@ cp ./obfs4proxy/obfs4proxy /usr/bin/obfs4proxy
 ## 3. 配置 Tor Bridges
 
 ### 编辑配置文件
+
 ```bash
 vim /etc/tor/torrc
 ```
@@ -62,11 +68,13 @@ PublishServerDescriptor 0
 ```
 
 ### 重启tor服务
+
 ```bash
 systemctl restart tor
 ```
 
 ### 查看tor服务状态
+
 ```bash
 systemctl status tor
 ```
@@ -74,6 +82,7 @@ systemctl status tor
 ## 4. 使用网桥
 
 查看日志文件：
+
 ```bash
 tail -F /var/log/tor/notices.log
 ```
@@ -104,6 +113,7 @@ iat-mode=0
 ```
 
 根据日志中的信息获得最终的网桥配置：
+
 ```text
 obfs4 <IP ADDRESS>:46396 530FA95A79B9145D315F15F01215BE2F3BE921EB
 cert=6LMNcXh6MIfApbZiMksnS4Kj+2sffZ5pybSqtcOO5YoHgfrMpkBJqvLxhuR2Ppau0L2seg
@@ -113,11 +123,13 @@ iatmode=0
 ## 5. 防火墙配置
 
 编辑防火墙公共配置文件：
+
 ```bash
 vim /etc/firewalld/zones/public.xml
 ```
 
 内容如下(本例ORPort端口 => 6666, obfs4端口 => 46396)：
+
 ```xml
 <port protocol="tcp" port="ORPort端口"/>
 <port protocol="udp" port="ORPort端口"/>
@@ -126,6 +138,7 @@ vim /etc/firewalld/zones/public.xml
 ```
 
 使防火墙配置生效：
+
 ```bash
 firewall-cmd --complete-reload
 ```

@@ -21,6 +21,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/XrayR-project/XrayR-release/ma
 v2ray 节点需要进行时间同步，时间若与客户端相差太大则无法连接
 
 ### CentOS 7
+
 ```bash
 yum install -y ntp
 systemctl enable ntpd
@@ -29,6 +30,7 @@ systemctl restart ntpd
 ```
 
 ### Debian 9 / Ubuntu 16
+
 ```bash
 apt-get install -y ntp
 systemctl enable ntp
@@ -36,6 +38,7 @@ systemctl restart ntp
 ```
 
 ### 或者（时间同步为上海）
+
 ```bash
 rm -rf /etc/localtime
 ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
@@ -45,7 +48,9 @@ ntpdate time.nist.gov
 ## 四、面板节点配置
 
 ### 添加节点
+
 在后台 > 节点管理 > 添加节点：
+
 - 节点名称：随便填写
 - 权限组：随便填写
 - 节点地址：填cf的ip或者伪装的域名
@@ -54,6 +59,7 @@ ntpdate time.nist.gov
 - 传输协议：选择websocket
 
 ### 配置协议
+
 ```json
 {
     "path": "/随便",
@@ -112,10 +118,13 @@ CertConfig:
 ```
 
 ## 六、启动 XrayR
+
 ```bash
 xrayr start
 ```
+
 或者
+
 ```bash
 XrayR
 ```

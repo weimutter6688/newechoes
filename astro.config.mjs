@@ -2,7 +2,7 @@
 import { defineConfig } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
-
+import mdx from '@astrojs/mdx';
 import react from '@astrojs/react';
 import remarkEmoji from 'remark-emoji';
 import rehypeExternalLinks from 'rehype-external-links';
@@ -65,6 +65,21 @@ export default defineConfig({
   },
 
   integrations: [
+    mdx({
+      syntaxHighlight: 'prism',
+      remarkPlugins: [
+        [remarkEmoji, { emoticon: true }]
+      ],
+      rehypePlugins: [
+        [rehypeExternalLinks, { target: '_blank', rel: ['nofollow', 'noopener', 'noreferrer'] }]
+      ],
+      gfm: true,
+      shikiConfig: {
+        theme: 'github-dark',
+        langs: [],
+        wrap: true,
+      }
+    }),
     react(),
     sitemap({
       filter: (page) => !page.includes('/api/'),
@@ -112,18 +127,15 @@ export default defineConfig({
   markdown: {
     syntaxHighlight: 'prism',
     remarkPlugins: [
-      [remarkEmoji, { emoticon: true }] // 启用表情符号和情感符号
+      [remarkEmoji, { emoticon: true }]
     ],
     rehypePlugins: [
       [rehypeExternalLinks, { target: '_blank', rel: ['nofollow', 'noopener', 'noreferrer'] }]
     ],
-    gfm: true, // GitHub Flavored Markdown
+    gfm: true,
     shikiConfig: {
-      // 选择一个主题 (可选)
       theme: 'github-dark',
-      // 添加自定义语言
       langs: [],
-      // 启用自动换行，防止水平滚动
       wrap: true,
     }
   },
