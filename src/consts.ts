@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://lsy22.com';
+export const SITE_URL = 'https://blog.lsy22.com';
 export const SITE_NAME = "echoes";
 export const SITE_DESCRIPTION = "记录生活，分享所思";
 
