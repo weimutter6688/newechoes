@@ -15,9 +15,14 @@ import vercel from '@astrojs/vercel';
 
 function getArticleDate(articleId) {
   try {
+    // 处理多级目录的文章路径
     const mdPath = path.join(process.cwd(), 'src/content', articleId + '.md');
-    if (fs.existsSync(mdPath)) {
-      const content = fs.readFileSync(mdPath, 'utf-8');
+    const mdxPath = path.join(process.cwd(), 'src/content', articleId + '.mdx');
+    
+    let filePath = fs.existsSync(mdPath) ? mdPath : mdxPath;
+    
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf-8');
       const match = content.match(/date:\s*(\d{4}-\d{2}-\d{2})/);
       if (match) {
         return new Date(match[1]).toISOString();
@@ -26,7 +31,7 @@ function getArticleDate(articleId) {
   } catch (error) {
     console.error('Error reading article date:', error);
   }
-  return null;
+  return new Date().toISOString(); // 如果没有日期，返回当前时间
 }
 
 // https://astro.build/config
@@ -91,13 +96,11 @@ export default defineConfig({
           // 从 URL 中提取文章 ID
           const articleId = item.url.replace(SITE_URL + '/articles/', '').replace(/\/$/, '');
           const publishDate = getArticleDate(articleId);
-          if (publishDate) {
-            return {
-              ...item,
-              priority: 0.8,
-              lastmod: publishDate
-            };
-          }
+          return {
+            ...item,
+            priority: 0.8,
+            lastmod: publishDate
+          };
         }
         // 其他页面
         else {
@@ -117,9 +120,7 @@ export default defineConfig({
             priority
           };
         }
-      },
-      // 设置较小的条目限制，这样会自动分割成多个文件
-      entryLimit: 5
+      }
     })
   ],
 
