@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { contentStructure, getRelativePath, getBasename, getDirPath, getOriginalPath, getSpecialPath } from '@/content.config';
+import { contentStructure, getRelativePath, getBasename, getDirPath, getSpecialPath } from '@/content.config';
 import type { SectionStructure } from '@/content.config';
 import Layout from '@/components/Layout.astro';
 import Breadcrumb from '@/components/Breadcrumb.astro';
@@ -10,6 +10,7 @@ export const prerender = true;
 
 export async function getStaticPaths() {
   const articles = await getCollection('articles');
+  const views = ['grid', 'timeline'];
   
   // 为每篇文章添加section信息
   const articlesWithSections = articles.map(article => {
@@ -67,23 +68,41 @@ export async function getStaticPaths() {
   });
   
   // 为每篇文章生成路由参数
-  return articlesWithSections.map(article => {
+  const paths = [];
+  for (const article of articlesWithSections) {
     // 检查文章ID是否需要特殊处理
     const specialId = getSpecialPath(article.id);
     
-    return {
+    // 添加基本路由
+    paths.push({
       params: { id: specialId },
       props: { 
         article, 
         section: article.section,
-        originalId: specialId !== article.id ? article.id : undefined
+        originalId: specialId !== article.id ? article.id : undefined,
+        view: undefined
       }
-    };
-  });
+    });
+    
+    // 为每个视图添加路由
+    for (const view of views) {
+      paths.push({
+        params: { id: `${specialId}/${view}` },
+        props: { 
+          article, 
+          section: article.section,
+          originalId: specialId !== article.id ? article.id : undefined,
+          view
+        }
+      });
+    }
+  }
+  
+  return paths;
 }
 
 // 获取文章内容
-const { article, section, originalId } = Astro.props;
+const { article, section, originalId, view } = Astro.props;
 
 // 如果有原始ID，使用它来渲染内容
 const articleToRender = originalId ? { ...article, id: originalId } : article;
@@ -108,7 +127,7 @@ const description = article.data.summary || `${article.data.title} - 发布于 $
 
 // 处理特殊ID的函数
 function getArticleUrl(articleId: string) {
-  return `/articles/${getSpecialPath(articleId)}`;
+  return `/articles/${getSpecialPath(articleId)}${view ? `/${view}` : ''}`;
 }
 ---
 
@@ -139,7 +158,7 @@ function getArticleUrl(articleId: string) {
           
           <div class="flex items-center gap-3">
             {/* 返回按钮 */}
-            <a href="/articles" class="text-secondary-500 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center text-sm">
+            <a href={`/articles${view ? `/${view}` : ''}`} class="text-secondary-500 dark:text-secondary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
