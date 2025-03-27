@@ -4,6 +4,16 @@ import { load } from 'cheerio';
 // 添加服务器渲染标记
 export const prerender = false;
 
+// 生成随机的bid Cookie值
+function generateBid() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 11; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
   const type = url.searchParams.get('type') || 'movie';
@@ -25,12 +35,19 @@ export const GET: APIRoute = async ({ request }) => {
       doubanUrl = `https://movie.douban.com/people/${doubanId}/collect?start=${start}&sort=time&rating=all&filter=all&mode=grid`;
     }
 
+    // 生成随机bid
+    const bid = generateBid();
+
     const response = await fetch(doubanUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Referer': 'https://movie.douban.com/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-User': '?1',
+        'Sec-Fetch-Dest': 'document',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Cookie': `bid=${bid}`
       }
     });
     
@@ -58,25 +75,62 @@ export const GET: APIRoute = async ({ request }) => {
     }
     
     const items: DoubanItem[] = [];
-    $('.item.comment-item').each((_, element) => {
+    
+    // 尝试不同的选择器
+    let itemSelector = '.item.comment-item';
+    let itemCount = $(itemSelector).length;
+    
+    if (itemCount === 0) {
+      // 尝试其他可能的选择器
+      itemSelector = '.subject-item';
+      itemCount = $(itemSelector).length;
+    }
+    
+    $(itemSelector).each((_, element) => {
       const $element = $(element);
       
-      const imageUrl = $element.find('.pic img').attr('src') || '';
-      const title = $element.find('.title a em').text().trim();
-      const subtitle = $element.find('.title a').text().replace(title, '').trim();
-      const link = $element.find('.title a').attr('href') || '';
-      const intro = $element.find('.intro').text().trim();
-      
-      // 获取评分，从rating1-t到rating5-t
+      // 根据选择器调整查找逻辑
+      let imageUrl = '';
+      let title = '';
+      let subtitle = '';
+      let link = '';
+      let intro = '';
       let rating = 0;
-      for (let i = 1; i <= 5; i++) {
-        if ($element.find(`.rating${i}-t`).length > 0) {
-          rating = i;
-          break;
-        }
-      }
+      let date = '';
       
-      const date = $element.find('.date').text().trim();
+      if (itemSelector === '.item.comment-item') {
+        // 原始逻辑
+        imageUrl = $element.find('.pic img').attr('src') || '';
+        title = $element.find('.title a em').text().trim();
+        subtitle = $element.find('.title a').text().replace(title, '').trim();
+        link = $element.find('.title a').attr('href') || '';
+        intro = $element.find('.intro').text().trim();
+        
+        // 获取评分，从rating1-t到rating5-t
+        for (let i = 1; i <= 5; i++) {
+          if ($element.find(`.rating${i}-t`).length > 0) {
+            rating = i;
+            break;
+          }
+        }
+        
+        date = $element.find('.date').text().trim();
+      } else if (itemSelector === '.subject-item') {
+        // 新的图书页面结构
+        imageUrl = $element.find('.pic img').attr('src') || '';
+        title = $element.find('.info h2 a').text().trim();
+        link = $element.find('.info h2 a').attr('href') || '';
+        intro = $element.find('.info .pub').text().trim();
+        
+        // 获取评分
+        const ratingClass = $element.find('.rating-star').attr('class') || '';
+        const ratingMatch = ratingClass.match(/rating(\d)-t/);
+        if (ratingMatch) {
+          rating = parseInt(ratingMatch[1]);
+        }
+        
+        date = $element.find('.info .date').text().trim();
+      }
       
       items.push({
         imageUrl,

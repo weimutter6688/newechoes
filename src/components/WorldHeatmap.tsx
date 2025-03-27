@@ -9,11 +9,22 @@ interface WorldHeatmapProps {
 
 const WorldHeatmap: React.FC<WorldHeatmapProps> = ({ visitedPlaces }) => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
     if (!chartRef.current) return;
 
-    const chart = echarts.init(chartRef.current);
+    // 确保之前的实例被正确销毁
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.dispose();
+    }
+
+    // 初始化图表并保存实例引用
+    const chart = echarts.init(chartRef.current, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    chartInstanceRef.current = chart;
 
     const mergedWorldData = {
       ...worldData,
@@ -41,17 +52,44 @@ const WorldHeatmap: React.FC<WorldHeatmapProps> = ({ visitedPlaces }) => {
 
     echarts.registerMap('merged-world', mergedWorldData as any);
 
+    // 检查当前是否为暗色模式
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    
+    // 根据当前模式设置颜色
+    const getChartColors = () => {
+      return {
+        textColor: isDarkMode ? '#ffffff' : '#374151',
+        borderColor: isDarkMode ? '#374151' : '#e5e7eb',
+        unvisitedColor: isDarkMode ? '#1f2937' : '#e5e7eb',
+        visitedColor: isDarkMode ? '#059669' : '#10b981',
+        emphasisColor: isDarkMode ? '#059669' : '#10b981',
+        tooltipBgColor: isDarkMode ? '#111827' : '#ffffff',
+      };
+    };
+    
+    const colors = getChartColors();
+
+    // 使用动态颜色方案
     const option = {
       title: {
         text: '我的旅行足迹',
         left: 'center',
-        top: 20
+        top: 20,
+        textStyle: {
+          color: colors.textColor,
+          fontWeight: 'bold'
+        }
       },
       tooltip: {
         trigger: 'item',
         formatter: ({name}: {name: string}) => {
           const visited = visitedPlaces.includes(name);
           return `${name}<br/>${visited ? '✓ 已去过' : '尚未去过'}`;
+        },
+        backgroundColor: colors.tooltipBgColor,
+        borderColor: colors.borderColor,
+        textStyle: {
+          color: colors.textColor
         }
       },
       visualMap: {
@@ -62,13 +100,14 @@ const WorldHeatmap: React.FC<WorldHeatmapProps> = ({ visitedPlaces }) => {
           { value: 0, label: '未去过' }
         ],
         inRange: {
-          color: ['#e0e0e0', '#91cc75']
+          color: [colors.unvisitedColor, colors.visitedColor]
         },
         outOfRange: {
-          color: ['#e0e0e0']
+          color: [colors.unvisitedColor]
         },
         textStyle: {
-          color: '#333'
+          color: colors.textColor,
+          fontWeight: 500
         }
       },
       series: [{
@@ -78,11 +117,17 @@ const WorldHeatmap: React.FC<WorldHeatmapProps> = ({ visitedPlaces }) => {
         roam: true,
         emphasis: {
           label: {
-            show: true
+            show: true,
+            color: colors.textColor
           },
           itemStyle: {
-            areaColor: '#91cc75'
+            areaColor: colors.emphasisColor
           }
+        },
+        itemStyle: {
+          borderColor: colors.borderColor,
+          borderWidth: 1,
+          borderType: 'solid'
         },
         data: mergedWorldData.features.map((feature: any) => ({
           name: feature.properties.name,
@@ -93,20 +138,102 @@ const WorldHeatmap: React.FC<WorldHeatmapProps> = ({ visitedPlaces }) => {
     };
 
     chart.setOption(option);
+    
+    // 确保图表初始化后立即调整大小以适应容器
+    chart.resize();
 
-    window.addEventListener('resize', () => {
-      chart.resize();
+    const handleResize = () => {
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.resize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // 监听暗色模式变化并更新图表
+    const darkModeObserver = new MutationObserver(() => {
+      if (!chartRef.current) return;
+      
+      // 检查当前是否为暗色模式
+      const newIsDarkMode = document.documentElement.classList.contains('dark');
+      
+      if (chartInstanceRef.current) {
+        // 更新颜色设置
+        const newColors = {
+          textColor: newIsDarkMode ? '#ffffff' : '#374151',
+          borderColor: newIsDarkMode ? '#4b5563' : '#d1d5db',
+          unvisitedColor: newIsDarkMode ? '#1f2937' : '#e5e7eb',
+          visitedColor: newIsDarkMode ? '#059669' : '#10b981',
+          emphasisColor: newIsDarkMode ? '#059669' : '#10b981',
+          tooltipBgColor: newIsDarkMode ? '#111827' : '#ffffff',
+        };
+        
+        // 更新图表选项
+        const newOption = {
+          title: {
+            textStyle: {
+              color: newColors.textColor
+            }
+          },
+          tooltip: {
+            backgroundColor: newColors.tooltipBgColor,
+            borderColor: newColors.borderColor,
+            textStyle: {
+              color: newColors.textColor
+            }
+          },
+          visualMap: {
+            inRange: {
+              color: [newColors.unvisitedColor, newColors.visitedColor]
+            },
+            outOfRange: {
+              color: [newColors.unvisitedColor]
+            },
+            textStyle: {
+              color: newColors.textColor
+            }
+          },
+          series: [{
+            emphasis: {
+              label: {
+                show: true,
+                color: newColors.textColor
+              },
+              itemStyle: {
+                areaColor: newColors.emphasisColor
+              }
+            },
+            itemStyle: {
+              borderColor: newColors.borderColor,
+              borderWidth: 1,
+              borderType: 'solid'
+            }
+          }]
+        };
+        
+        // 应用新选项
+        chartInstanceRef.current.setOption(newOption);
+      }
     });
 
+    darkModeObserver.observe(document.documentElement, { attributes: true });
+
     return () => {
-      chart.dispose();
-      window.removeEventListener('resize', () => {
-        chart.resize();
-      });
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.dispose();
+        chartInstanceRef.current = null;
+      }
+      window.removeEventListener('resize', handleResize);
+      darkModeObserver.disconnect();
     };
   }, [visitedPlaces]);
 
-  return <div ref={chartRef} style={{ width: '100%', height: '600px' }} />;
+  return (
+    <div 
+      ref={chartRef} 
+      className="w-full h-[600px] md:h-[500px] lg:h-[600px] xl:h-[700px] dark:[&_.echarts-tooltip]:bg-[#111827] dark:[&_.echarts-tooltip]:border-[#374151] dark:[&_.echarts-tooltip]:text-white dark:[&_.echarts-title]:text-white dark:[&_.echarts-visual-map]:text-white dark:[&_.echarts-map]:border-[#4b5563] dark:[&_.echarts-map-emphasis]:text-white dark:[&_.echarts-map-emphasis]:bg-[#059669] dark:[&_.echarts-map-unvisited]:bg-[#1f2937] dark:[&_.echarts-map-visited]:bg-[#059669]"
+    />
+  );
 };
 
 export default WorldHeatmap; 
