@@ -149,7 +149,7 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
                                 {link.text}
                             </a>
                         ))}
-                        <div class="mt-2 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div class="mt-2 pt-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800/70 rounded-lg px-3 py-2 transition-colors duration-200" id="theme-toggle-container">
                             <span class="text-sm font-medium text-gray-600 dark:text-gray-300">切换主题</span>
                             <ThemeToggle client:load />
                         </div>
@@ -269,6 +269,24 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
             menuCloseIcon.classList.toggle('hidden');
         });
     }
+    
+    // 移动端主题切换容器点击处理
+    document.addEventListener('DOMContentLoaded', () => {
+        const themeToggleContainer = document.getElementById('theme-toggle-container');
+        
+        if (themeToggleContainer) {
+            themeToggleContainer.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                const themeToggleButton = themeToggleContainer.querySelector('[role="button"]');
+                
+                // 如果点击的不是主题切换按钮本身，而是容器或文本
+                if (themeToggleButton instanceof HTMLElement && target !== themeToggleButton && !themeToggleButton.contains(target)) {
+                    // 手动触发主题切换按钮的点击
+                    themeToggleButton.click();
+                }
+            });
+        }
+    });
     
     // 搜索功能逻辑
     document.addEventListener('DOMContentLoaded', () => {
