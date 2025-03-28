@@ -8,18 +8,9 @@ export enum GitPlatform {
   GITEE = 'gitee'
 }
 
-// Git 配置接口
-export type GitConfig = {
-  username: string;
-  token?: string;
-  perPage?: number;
-  url?: string;
-};
-
 // 平台默认配置
 export const DEFAULT_GIT_CONFIG = {
-  perPage: 10,
-  giteaUrl: ''
+  perPage: 10
 };
 
 // 内部使用的平台配置
@@ -62,10 +53,12 @@ interface Pagination {
 
 interface GitProjectCollectionProps {
   platform: GitPlatform;
-  username?: string;
+  username: string;
   organization?: string;
   title?: string;
-  config: GitConfig;
+  token?: string;
+  perPage?: number;
+  url?: string;
 }
 
 const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({ 
@@ -73,15 +66,15 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
   username, 
   organization,
   title,
-  config
+  token,
+  perPage = DEFAULT_GIT_CONFIG.perPage,
+  url
 }) => {
   const [projects, setProjects] = useState<GitProject[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ current: 1, total: 1, hasNext: false, hasPrev: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPageChanging, setIsPageChanging] = useState(false);
-
-  const effectiveUsername = username || config.username;
 
   const fetchData = async (page = 1) => {
     setLoading(true);
@@ -97,10 +90,19 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
       
       baseUrl.searchParams.append('platform', platform);
       baseUrl.searchParams.append('page', page.toString());
+      
+      // 构建配置对象
+      const config = {
+        username,
+        token,
+        perPage,
+        url
+      };
+      
       baseUrl.searchParams.append('config', JSON.stringify(config));
       
-      if (effectiveUsername) {
-        baseUrl.searchParams.append('username', effectiveUsername);
+      if (username) {
+        baseUrl.searchParams.append('username', username);
       }
       
       if (organization) {
@@ -132,7 +134,7 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
   
   useEffect(() => {
     fetchData(1);
-  }, [platform, effectiveUsername, organization]);
+  }, [platform, username, organization, token, perPage, url]);
 
   const handlePageChange = (page: number) => {
     if (isPageChanging) return;
@@ -219,7 +221,7 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
     <div className="git-project-collection max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h2 className="text-2xl font-bold mb-6 text-primary-700">
         {displayTitle}
-        {effectiveUsername && <span className="ml-2 text-secondary-500">(@{effectiveUsername})</span>}
+        {username && <span className="ml-2 text-secondary-500">(@{username})</span>}
         {organization && <span className="ml-2 text-secondary-500">(组织: {organization})</span>}
       </h2>
       

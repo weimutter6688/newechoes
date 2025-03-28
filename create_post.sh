@@ -6,15 +6,15 @@ PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 # 如果没有提供参数，使用交互式输入
 if [ "$#" -lt 2 ]; then
     read -rp "请输入文章标题: " TITLE
-    read -rp "请输入文章路径 (例如: web/my-post): " PATH_ARG
+    read -rp "请输入文章路径 (例如: web/my-post)，也可以为空: " PATH_ARG
 else
     TITLE=$1
     PATH_ARG=$2
 fi
 
 # 检查输入是否为空
-if [ -z "$TITLE" ] || [ -z "$PATH_ARG" ]; then
-    echo "错误: 标题和路径不能为空"
+if [ -z "$TITLE" ] ; then
+    echo "错误: 标题不能为空"
     echo "使用方法: $0 <标题> <路径>"
     echo "示例: $0 \"我的新文章\" \"web/my-post\""
     exit 1
@@ -31,7 +31,7 @@ FULL_PATH="$CONTENT_DIR/$PATH_ARG"
 mkdir -p "$FULL_PATH"
 
 # 构建最终的文件路径
-FILENAME="$FULL_PATH/$(basename "$PATH_ARG").md"
+FILENAME="$FULL_PATH/$(basename "$TITLE").md"
 ABSOLUTE_PATH="$(cd "$(dirname "$FILENAME")" 2>/dev/null && pwd)/$(basename "$FILENAME")"
 
 # 检查文件是否已存在

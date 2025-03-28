@@ -14,6 +14,7 @@ tags: []
 4. **项目展示**：支持展示 GitHub、Gitea 和 Gitee 的项目
 5. **观影记录**：集成豆瓣观影数据
 6. **读书记录**：集成豆瓣读书数据
+7. **旅行足迹**：支持展示全球旅行足迹热力图
 
 ## 基础配置
 
@@ -42,6 +43,9 @@ export const PSB_ICP_URL = '备案链接';
 
 // 豆瓣配置
 export const DOUBAN_ID = '你的豆瓣ID';
+
+// 旅行足迹
+export const VISITED_PLACES = ['中国-北京', '中国-上海', '美国-纽约'];
 ```
 
 ## 文章写作
@@ -110,23 +114,17 @@ tags: ["标签1", "标签2"]
 ```astro
 ---
 import GitProjectCollection from '@/components/GitProjectCollection';
-import { GitPlatform, type GitConfig } from '@/components/GitProjectCollection';
-
-// Gitea 配置示例
-const giteaConfig: GitConfig = {
-  username: 'your-username',      // 必填：用户名
-  token: 'your-token',           // 可选：访问令牌，用于访问私有仓库
-  perPage: 10,                   // 可选：每页显示数量，默认 10
-  url: 'your-git-url'         // Gitea 必填，GitHub/Gitee 无需填写
-};
+import { GitPlatform } from '@/components/GitProjectCollection';
 ---
 
 <GitProjectCollection 
   platform={GitPlatform.GITEA}   // 平台类型：GITHUB、GITEA、GITEE
-  username="your-username"       // 可选：覆盖 config 中的用户名
-  title="Git 项目"            // 显示标题
-  config={giteaConfig}          // 平台配置
-  client:load                   // Astro 指令：客户端加载
+  username="your-username"       // 必填：用户名
+  title="Git 项目"               // 可选：显示标题
+  url="https://your-gitea.com"   // 可选：Gitea 实例 URL（Gitea 必填，GitHub/Gitee 无需填写）
+  token="your-token"             // 可选：访问令牌，用于访问私有仓库
+  perPage={10}                   // 可选：每页显示数量，默认 10
+  client:load                    // Astro 指令：客户端加载
 />
 ```
 
@@ -157,6 +155,53 @@ import MediaGrid from '@/components/MediaGrid.astro';
   doubanId={DOUBAN_ID}
 />
 ```
+
+## 旅行足迹
+
+### WorldHeatmap 组件
+
+`WorldHeatmap` 组件用于展示你去过的地方，以热力图的形式在世界地图上显示。
+
+#### 基本用法
+
+在 `src/consts.ts` 中配置你去过的地方：
+
+```typescript
+// 配置你去过的地方
+export const VISITED_PLACES = [
+  // 国内地区格式：'中国-省份/城市'
+  '中国-黑龙江', 
+  '中国-北京', 
+  '中国-上海',
+  // 国外地区直接使用国家名
+  '马来西亚',
+  '泰国',
+  '美国'
+];
+```
+
+然后在页面中使用：
+
+```astro
+---
+import Layout from "@/components/Layout.astro";
+import WorldHeatmap from '@/components/WorldHeatmap';
+import { VISITED_PLACES } from '@/consts';
+---
+
+<Layout title="旅行足迹">
+  <section>
+    <h2 class="text-3xl font-semibold text-center mb-6">我的旅行足迹</h2>
+    <div class="mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <WorldHeatmap 
+        client:only="react" 
+        visitedPlaces={VISITED_PLACES}
+      />
+    </div>
+  </section>
+</Layout>
+```
+
 
 ## 主题切换
 
