@@ -303,6 +303,7 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
             summary?: string;
             tags?: string[];
             image?: string;
+            content?: string;
         }
         
         let articles: Article[] = [];
@@ -318,6 +319,17 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
             } catch (error) {
                 console.error('获取文章失败:', error);
             }
+        }
+        
+        // 高亮文本中的匹配部分
+        function highlightText(text: string, query: string): string {
+            if (!text || !query.trim()) return text;
+            
+            // 转义正则表达式中的特殊字符
+            const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedQuery})`, 'gi');
+            
+            return text.replace(regex, '<mark class="bg-yellow-100 dark:bg-yellow-900/30 text-gray-900 dark:text-gray-100 px-0.5 rounded">$1</mark>');
         }
         
         // 搜索文章
@@ -339,16 +351,18 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
             
             // 过滤并排序结果
             const filteredArticles = articles
-                .filter(article => {
+                .filter((article: Article) => {
                     const title = article.title.toLowerCase();
-                    const tags = article.tags ? article.tags.map(tag => tag.toLowerCase()) : [];
+                    const tags = article.tags ? article.tags.map((tag: string) => tag.toLowerCase()) : [];
                     const summary = article.summary ? article.summary.toLowerCase() : '';
+                    const content = article.content ? article.content.toLowerCase() : '';
                     
                     return title.includes(lowerQuery) || 
-                           tags.some(tag => tag.includes(lowerQuery)) ||
-                           summary.includes(lowerQuery);
+                           tags.some((tag: string) => tag.includes(lowerQuery)) ||
+                           summary.includes(lowerQuery) ||
+                           content.includes(lowerQuery);
                 })
-                .sort((a, b) => {
+                .sort((a: Article, b: Article) => {
                     // 标题匹配优先
                     const aTitle = a.title.toLowerCase();
                     const bTitle = b.title.toLowerCase();
@@ -357,6 +371,17 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
                         return -1;
                     }
                     if (!aTitle.includes(lowerQuery) && bTitle.includes(lowerQuery)) {
+                        return 1;
+                    }
+                    
+                    // 内容匹配次之
+                    const aContent = a.content ? a.content.toLowerCase() : '';
+                    const bContent = b.content ? b.content.toLowerCase() : '';
+                    
+                    if (aContent.includes(lowerQuery) && !bContent.includes(lowerQuery)) {
+                        return -1;
+                    }
+                    if (!aContent.includes(lowerQuery) && bContent.includes(lowerQuery)) {
                         return 1;
                     }
                     
@@ -374,14 +399,43 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
             
             // 显示结果
             resultsMessage.style.display = 'none';
-            resultsList.innerHTML = filteredArticles.map(article => `
+            resultsList.innerHTML = filteredArticles.map((article: Article) => {
+                // 生成匹配的内容片段
+                let contentMatch = '';
+                if (article.content && article.content.toLowerCase().includes(lowerQuery)) {
+                    // 找到匹配文本在内容中的位置
+                    const matchIndex = article.content.toLowerCase().indexOf(lowerQuery);
+                    // 计算片段的起始和结束位置
+                    const startPos = Math.max(0, matchIndex - 50);
+                    const endPos = Math.min(article.content.length, matchIndex + 100);
+                    // 提取片段
+                    let snippet = article.content.substring(startPos, endPos);
+                    // 如果不是从文章开头开始，添加省略号
+                    if (startPos > 0) {
+                        snippet = '...' + snippet;
+                    }
+                    // 如果不是到文章结尾，添加省略号
+                    if (endPos < article.content.length) {
+                        snippet = snippet + '...';
+                    }
+                    // 高亮匹配的文本
+                    snippet = highlightText(snippet, query);
+                    contentMatch = `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${snippet}</p>`;
+                }
+
+                // 高亮标题和摘要中的匹配文本
+                const highlightedTitle = highlightText(article.title, query);
+                const highlightedSummary = article.summary ? highlightText(article.summary, query) : '';
+
+                return `
                 <li>
-                    <a href="/articles/${article.id}" class="block px-4 py-3 hover:bg-gray-50/70 dark:hover:bg-gray-700/70 transition-colors duration-200">
-                        <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">${article.title}</h3>
-                        ${article.summary ? `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">${article.summary}</p>` : ''}
+                    <a href="/articles/${article.id}" class="block px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors duration-200">
+                        <h3 class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">${highlightedTitle}</h3>
+                        ${article.summary ? `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">${highlightedSummary}</p>` : ''}
+                        ${contentMatch}
                         ${article.tags && article.tags.length > 0 ? `
                             <div class="flex flex-wrap gap-1 mt-1.5">
-                                ${article.tags.slice(0, 3).map(tag => `
+                                ${article.tags.slice(0, 3).map((tag: string) => `
                                     <span class="inline-block text-xs bg-primary-50/50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 py-0.5 px-1.5 rounded-full">#${tag}</span>
                                 `).join('')}
                                 ${article.tags.length > 3 ? `<span class="text-xs text-gray-400 dark:text-gray-500">+${article.tags.length - 3}</span>` : ''}
@@ -389,7 +443,7 @@ const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : cu
                         ` : ''}
                     </a>
                 </li>
-            `).join('');
+            `}).join('');
         }
         
         // 节流搜索

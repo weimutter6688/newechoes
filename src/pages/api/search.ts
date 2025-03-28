@@ -8,14 +8,28 @@ export async function GET() {
     // 过滤掉草稿文章，并转换为简化的数据结构
     const formattedArticles = articles
       .filter(article => !article.data.draft) // 过滤掉草稿
-      .map(article => ({
-        id: article.id,
-        title: article.data.title,
-        date: article.data.date,
-        summary: article.data.summary || '',
-        tags: article.data.tags || [],
-        image: article.data.image || ''
-      }))
+      .map(article => {
+        // 提取文章内容，去除 Markdown 标记
+        let contentText = '';
+        if (article.body) {
+          contentText = article.body
+            .replace(/---[\s\S]*?---/, '') // 移除 frontmatter
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 将链接转换为纯文本
+            .replace(/[#*`~>]/g, '') // 移除特殊字符
+            .replace(/\n+/g, ' ') // 将换行转换为空格
+            .trim();
+        }
+        
+        return {
+          id: article.id,
+          title: article.data.title,
+          date: article.data.date,
+          summary: article.data.summary || '',
+          tags: article.data.tags || [],
+          image: article.data.image || '',
+          content: contentText // 添加文章内容
+        };
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // 按日期排序
     
     return new Response(JSON.stringify(formattedArticles), {

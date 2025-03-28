@@ -135,5 +135,3 @@ pre[class*="language-"] {
 [data-theme="dark"] pre[class*="language-"] {
 	background: #282c34 !important;
 }
-
-/* 添加其他token的暗色模式样式... */ 

@@ -41,6 +41,14 @@
   --color-dark-border: #475569;
   --color-dark-text: #e2e8f0;
   --color-dark-text-secondary: #94a3b8;
+  
+  /* 滚动条颜色变量 */
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #94a3b8;
+  --scrollbar-thumb-hover: #64748b;
+  --scrollbar-dark-track: #1e293b;
+  --scrollbar-dark-thumb: #475569;
+  --scrollbar-dark-thumb-hover: #64748b;
 }
 
 /* 深色模式样式 */
@@ -53,4 +61,63 @@
   
   background-color: var(--bg-primary);
   color: var(--text-primary);
+}
+
+/* 自定义滚动条样式 - 适用于所有浏览器 */
+/* 滚动条基础样式 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 8px;
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
+  border: 2px solid var(--scrollbar-track);
+  transition: background-color 0.2s ease;
+}
+
+/* 滚动条滑块悬停 */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* 滚动条角落 */
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+/* 深色模式滚动条样式 */
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: var(--scrollbar-dark-track);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-dark-thumb);
+  border: 2px solid var(--scrollbar-dark-track);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-dark-thumb-hover);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-corner {
+  background: var(--scrollbar-dark-track);
+}
+
+/* Firefox 滚动条样式 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+[data-theme='dark'] * {
+  scrollbar-color: var(--scrollbar-dark-thumb) var(--scrollbar-dark-track);
 }

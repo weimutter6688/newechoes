@@ -659,6 +659,25 @@
   overflow: hidden;
 }
 
+/* 添加 details 内部内容的内边距 */
+.prose details > *:not(summary) {
+  padding: 1.5em;
+  margin: 0;
+}
+
+.prose details > p,
+.prose details > ul,
+.prose details > ol,
+.prose details > div,
+.prose details > pre {
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+.prose details > *:last-child {
+  margin-bottom: 0;
+}
+
 .prose details summary {
   padding: 1em;
   cursor: pointer;

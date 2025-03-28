@@ -201,6 +201,20 @@ function greet(user: User): string {
 
 ---
 
+### 1.9 表情符号
+
+
+| 表情名称 | 语法 | 效果 |
+|:--------|:-----|:-----|
+| 笑脸 | `:smile:` | :smile: |
+| 大笑 | `:laughing:` | :laughing: |
+| 哭泣 | `:cry:` | :cry: |
+| 心形 | `:heart:` | :heart: |
+| 火箭 | `:rocket:` | :rocket: |
+| 星星 | `:star:` | :star: |
+| 警告 | `:warning:` | :warning: |
+| 检查标记 | `:white_check_mark:` | :white_check_mark: |
+
 ## 2. HTML/JSX 语法部分
 
 ### 2.1 HTML 标签
@@ -241,50 +255,3 @@ function greet(user: User): string {
 
 </details>
 
-### 2.2 React 组件使用
-
-```mdx
-import { Button } from './Button'
-
-<Button variant="primary">
-  点击我
-</Button>
-```
-
-### 2.3 导出和使用变量
-
-```mdx
-export const myVariable = "Hello MDX!"
-
-# {myVariable}
-```
-
-### 2.4 使用 JavaScript 表达式
-
-```mdx
-{new Date().getFullYear()}
-
-{['React', 'Vue', 'Angular'].map(framework => (
-  <li key={framework}>{framework}</li>
-))}
-```
-
-### 2.5 组件属性传递
-
-```mdx
-<Card
-  title="我的卡片"
-  description="这是一个示例卡片"
-  image="path/to/image.jpg"
->
-  这里是卡片内容
-</Card>
-```
-
-### 2.6 导入其他 MDX 文件
-
-```mdx
-import OtherContent from './other-content.mdx'
-
-<OtherContent />
-```
