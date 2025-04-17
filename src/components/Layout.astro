@@ -4,76 +4,128 @@ import Header from "@/components/header.astro";
 import Footer from "@/components/Footer.astro";
 import { ICP, PSB_ICP, PSB_ICP_URL, SITE_NAME, SITE_DESCRIPTION } from "@/consts";
 
-// 定义Props接口
 interface Props {
-	title?: string;
-	description?: string;
-	date?: Date;
-	author?: string;
-	tags?: string[];
-	image?: string;
+  title?: string;
+  description?: string;
+  date?: Date;
+  author?: string;
+  tags?: string[];
+  image?: string;
+  isArticle?: boolean;
+  category?: string;
 }
 
-// 获取完整的 URL
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-
-// 从props中获取页面特定信息
-const { title = SITE_NAME, description = SITE_DESCRIPTION, date, author, tags, image } = Astro.props;
+const {
+  title = SITE_NAME,
+  description = SITE_DESCRIPTION,
+  date,
+  author,
+  tags,
+  image,
+  isArticle = false,
+  category
+} = Astro.props;
 ---
-<!doctype html>
-<html lang="zh-CN" class="m-0 w-full h-full">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="referrer" content="no-referrer" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		
-		<!-- 基本元数据 -->
-		<title>{title}</title>
-		<meta name="description" content={description || `${SITE_NAME} - 个人博客`} />
-		<link rel="canonical" href={canonicalURL} />
-		
-		<!-- Open Graph / Facebook -->
-		<meta property="og:type" content="article" />
-		<meta property="og:url" content={canonicalURL} />
-		<meta property="og:title" content={title} />
-		<meta property="og:description" content={description || `${SITE_NAME} - 个人博客`} />
-		{image && <meta property="og:image" content={new URL(image, Astro.site)} />}
-		
-		<!-- Twitter -->
-		<meta property="twitter:card" content="summary_large_image" />
-		<meta property="twitter:url" content={canonicalURL} />
-		<meta property="twitter:title" content={title} />
-		<meta property="twitter:description" content={description || `${SITE_NAME} - 个人博客`} />
-		{image && <meta property="twitter:image" content={new URL(image, Astro.site)} />}
-		
-		<!-- 文章特定元数据 -->
-		{date && <meta property="article:published_time" content={date.toISOString()} />}
-		{author && <meta name="author" content={author} />}
-		{tags && tags.map(tag => (
-			<meta property="article:tag" content={tag} />
-		))}
-		
-		<script is:inline>
-			// 立即执行主题初始化
-			const theme = (() => {
-				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-					return localStorage.getItem('theme');
-				}
-				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-					return 'dark';
-				}
-				return 'light';
-			})();
-			document.documentElement.dataset.theme = theme;
-		</script>
-	</head>
-	<body class="m-0 w-full h-full bg-gray-50 dark:bg-dark-bg transition-colors duration-300 flex flex-col min-h-screen">
-		<Header />
-		<main class="pt-16 flex-grow">
-			<slot />
-		</main>
-		<Footer icp={ICP} psbIcp={PSB_ICP} psbIcpUrl={PSB_ICP_URL} />
-	</body>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- 基本SEO标签 -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <!-- 搜索引擎验证 -->
+    <meta name="baidu-site-verification" content="你的百度验证码" />
+    <meta name="google-site-verification" content="你的谷歌验证码" />
+
+    <!-- OpenSearch -->
+    <link 
+      rel="search" 
+      type="application/opensearchdescription+xml" 
+      title="技术博客搜索" 
+      href="/opensearch.xml"
+    />
+
+    <!-- 页面元数据 -->
+    <meta name="author" content={author || SITE_NAME} />
+    {tags && <meta name="keywords" content={tags.join(", ")} />}
+    {category && <meta name="article:section" content={category} />}
+    {date && <meta name="article:published_time" content={date.toISOString()} />}
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:type" content={isArticle ? "article" : "website"} />
+    {image && <meta property="og:image" content={new URL(image, Astro.site)} />}
+    
+    <!-- 文章结构化数据 -->
+    {isArticle && (
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          "headline": title,
+          "description": description,
+          "image": image ? new URL(image, Astro.site) : null,
+          "datePublished": date?.toISOString(),
+          "author": {
+            "@type": "Person",
+            "name": author || SITE_NAME
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": SITE_NAME,
+            "logo": {
+              "@type": "ImageObject",
+              "url": new URL("/favicon.svg", Astro.site)
+            }
+          },
+          "keywords": tags?.join(", "),
+          "inLanguage": "zh-CN",
+          "url": canonicalURL,
+          "mainEntityOfPage": canonicalURL
+        })}
+      </script>
+    )}
+
+    <!-- 备案信息结构化数据 -->
+    <script type="application/ld+json">
+      {JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": SITE_NAME,
+        "url": Astro.site,
+        "logo": new URL("/favicon.svg", Astro.site),
+        "sameAs": [
+          "https://beian.miit.gov.cn/",
+          PSB_ICP_URL
+        ]
+      })}
+    </script>
+
+    <!-- 主题切换脚本 -->
+    <script is:inline>
+      const theme = localStorage.getItem('theme') ?? 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    </script>
+  </head>
+  <body class="bg-gray-50 dark:bg-dark-bg">
+    <Header />
+    {/* 添加 pt-16 以补偿固定页头的高度 */}
+    <main class="pt-16">
+      <slot />
+    </main>
+    <Footer icp={ICP} psbIcp={PSB_ICP} psbIcpUrl={PSB_ICP_URL} />
+  </body>
 </html>

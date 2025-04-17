@@ -1,0 +1,161 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/components/Layout.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  const allTags = articles.flatMap(article => article.data.tags || []);
+  const uniqueTags = [...new Set(allTags)];
+  
+  // 构建每个标签的相关信息
+  const tagInfo = {
+    // Windows相关
+    "Windows": {
+      description: "Windows系统管理、配置和优化相关的技术文章",
+      related: ["PowerShell", "批处理", "系统优化"]
+    },
+    "PowerShell": {
+      description: "PowerShell自动化脚本和Windows系统管理教程",
+      related: ["Windows", "自动化", "脚本"]
+    },
+    // Linux相关
+    "Linux": {
+      description: "Linux系统管理、服务器配置和Shell脚本教程",
+      related: ["Bash", "Shell", "Ubuntu", "CentOS"]
+    },
+    "Shell": {
+      description: "Shell脚本编程和Linux命令行使用指南",
+      related: ["Linux", "Bash", "自动化"]
+    },
+    // Python相关
+    "Python": {
+      description: "Python编程、Web开发和自动化脚本教程",
+      related: ["Django", "Flask", "爬虫"]
+    },
+    "Django": {
+      description: "Django Web框架开发教程和最佳实践",
+      related: ["Python", "Web开发", "后端"]
+    },
+    // DevOps相关
+    "Docker": {
+      description: "Docker容器化技术教程和实践指南",
+      related: ["DevOps", "容器化", "Kubernetes"]
+    },
+    "CI/CD": {
+      description: "持续集成和持续部署相关的技术教程",
+      related: ["DevOps", "自动化", "Jenkins"]
+    }
+  };
+  
+  return uniqueTags.map(tag => ({
+    params: { tag },
+    props: {
+      tag,
+      info: tagInfo[tag] || {
+        description: `${tag}相关的技术文章和教程`,
+        related: []
+      }
+    }
+  }));
+}
+
+const { tag, info } = Astro.props;
+
+// 获取标签相关文章
+const articles = await getCollection('articles');
+const tagArticles = articles
+  .filter(article => article.data.tags?.includes(tag))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// 构建Schema.org数据
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": `${tag} 技术文章`,
+  "description": info.description,
+  "about": {
+    "@type": "Thing",
+    "name": tag,
+    "description": info.description
+  },
+  "hasPart": tagArticles.map(article => ({
+    "@type": "TechArticle",
+    "headline": article.data.title,
+    "datePublished": article.data.date.toISOString(),
+    "url": new URL(`/articles/${article.id}`, Astro.site).toString()
+  }))
+};
+---
+
+<Layout 
+  title={`${tag} - 技术文章`}
+  description={info.description}
+>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <header class="mb-12">
+      <h1 class="text-3xl font-bold mb-4">{tag} 技术文章</h1>
+      <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
+        {info.description}
+      </p>
+      
+      {/* 相关技术标签 */}
+      {info.related.length > 0 && (
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold mb-3">相关技术：</h2>
+          <div class="flex flex-wrap gap-2">
+            {info.related.map(relatedTag => (
+              <a
+                href={`/articles/tag/${relatedTag}`}
+                class="px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm hover:bg-primary-100 dark:hover:bg-primary-800/30 transition-colors"
+              >
+                {relatedTag}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </header>
+
+    {/* 文章列表 */}
+    {tagArticles.length > 0 ? (
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {tagArticles.map(article => (
+          <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <a 
+              href={`/articles/${article.id}`}
+              class="block p-6 h-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <h2 class="text-xl font-bold mb-3 line-clamp-2">
+                {article.data.title}
+              </h2>
+              <time class="text-sm text-gray-500 mb-3 block">
+                {article.data.date.toLocaleDateString('zh-CN')}
+              </time>
+              {article.data.summary && (
+                <p class="text-gray-600 dark:text-gray-400 line-clamp-3 mb-4">
+                  {article.data.summary}
+                </p>
+              )}
+              <div class="flex flex-wrap gap-2 mt-auto">
+                {article.data.tags?.filter(t => t !== tag).map(t => (
+                  <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+        <p class="text-gray-600 dark:text-gray-400">
+          暂无相关技术文章
+        </p>
+      </div>
+    )}
+
+    {/* Schema.org 数据 */}
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  </div>
+</Layout>

@@ -1,6 +1,5 @@
 import type { APIContext } from 'astro';
 import { Octokit } from 'octokit';
-import fetch from 'node-fetch';
 import { GitPlatform } from '@/components/GitProjectCollection';
 
 interface GitProject {
@@ -28,7 +27,7 @@ export const prerender = false;
 export async function GET({ request }: APIContext) {
   try {
     const url = new URL(request.url);
-    
+
     const headers = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -43,14 +42,14 @@ export async function GET({ request }: APIContext) {
     const configStr = url.searchParams.get('config');
 
     if (!platformParam) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: '无效的平台参数',
         receivedPlatform: platformParam,
       }), { status: 400, headers });
     }
 
     if (!configStr) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: '缺少配置参数'
       }), { status: 400, headers });
     }
@@ -58,16 +57,16 @@ export async function GET({ request }: APIContext) {
     const config = JSON.parse(configStr);
 
     if (!Object.values(GitPlatform).includes(platformParam as GitPlatform)) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: '无效的平台参数',
         receivedPlatform: platformParam,
       }), { status: 400, headers });
     }
-    
+
     const platform = platformParam as GitPlatform;
     let projects: GitProject[] = [];
     let pagination: Pagination = { current: page, total: 1, hasNext: false, hasPrev: page > 1 };
-    
+
     if (platform === GitPlatform.GITHUB) {
       const result = await fetchGithubProjects(username, organization, page, config);
       projects = result.projects;
@@ -81,13 +80,13 @@ export async function GET({ request }: APIContext) {
       projects = result.projects;
       pagination = result.pagination;
     }
-    
+
     return new Response(JSON.stringify({ projects, pagination }), {
       status: 200,
       headers
     });
   } catch (error) {
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: '处理请求错误',
       message: error instanceof Error ? error.message : '未知错误'
     }), {
@@ -114,7 +113,7 @@ export function OPTIONS() {
 async function fetchGithubProjects(username: string, organization: string, page: number, config: any) {
   const maxRetries = 3;
   let retryCount = 0;
-  
+
   while (retryCount < maxRetries) {
     try {
       const octokit = new Octokit({
@@ -123,10 +122,10 @@ async function fetchGithubProjects(username: string, organization: string, page:
           timeout: 10000
         }
       });
-      
+
       const perPage = config.perPage || 10;
       let repos;
-      
+
       if (organization) {
         const { data } = await octokit.request('GET /orgs/{org}/repos', {
           org: organization,
@@ -155,21 +154,21 @@ async function fetchGithubProjects(username: string, organization: string, page:
         });
         repos = data;
       }
-      
+
       let hasNext = false;
       let hasPrev = page > 1;
       let totalPages = 1;
-      
+
       if (repos.length === perPage) {
         hasNext = true;
         totalPages = page + 1;
       }
-      
+
       if (repos.length > 0 && repos[0].owner) {
         hasNext = repos.length === perPage;
         totalPages = hasNext ? page + 1 : page;
       }
-      
+
       const projects = repos.map((repo: any) => ({
         name: repo.name,
         description: repo.description,
@@ -182,7 +181,7 @@ async function fetchGithubProjects(username: string, organization: string, page:
         avatarUrl: repo.owner.avatar_url,
         platform: GitPlatform.GITHUB
       }));
-      
+
       return {
         projects,
         pagination: {
@@ -194,15 +193,15 @@ async function fetchGithubProjects(username: string, organization: string, page:
       };
     } catch (error) {
       retryCount++;
-      
+
       if (retryCount >= maxRetries) {
         throw error;
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
     }
   }
-  
+
   return {
     projects: [],
     pagination: {
@@ -218,11 +217,11 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
   try {
     const perPage = config.perPage || 10;
     const giteaUrl = config.url;
-    
+
     if (!giteaUrl) {
       throw new Error('Gitea URL 不存在');
     }
-    
+
     let apiUrl;
     if (organization) {
       apiUrl = `${giteaUrl}/api/v1/orgs/${organization}/repos?page=${page}&per_page=${perPage}`;
@@ -231,25 +230,25 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
     } else {
       apiUrl = `${giteaUrl}/api/v1/users/${config.username}/repos?page=${page}&per_page=${perPage}`;
     }
-    
+
     const response = await fetch(apiUrl, {
       headers: {
         'Accept': 'application/json',
         ...(config.token ? { 'Authorization': `token ${config.token}` } : {})
       }
     });
-    
+
     if (!response.ok) {
       throw new Error(`Gitea API 请求失败: ${response.statusText}`);
     }
-    
+
     const data = await response.json() as any;
-    
+
     const repos = Array.isArray(data) ? data : [];
-    
+
     const totalCount = parseInt(response.headers.get('X-Total-Count') || '0');
     const totalPages = Math.ceil(totalCount / perPage) || 1;
-    
+
     const projects = repos.map((repo: any) => ({
       name: repo.name,
       description: repo.description || '',
@@ -262,7 +261,7 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
       avatarUrl: repo.owner.avatar_url,
       platform: GitPlatform.GITEA
     }));
-    
+
     return {
       projects,
       pagination: {
@@ -288,32 +287,32 @@ async function fetchGiteaProjects(username: string, organization: string, page: 
 async function fetchGiteeProjects(username: string, organization: string, page: number, config: any) {
   try {
     const perPage = config.perPage || 10;
-    
+
     const giteeUsername = username || config.username;
-    
+
     if (!giteeUsername) {
       throw new Error('Gitee 用户名未配置');
     }
-    
+
     let apiUrl;
     if (organization) {
       apiUrl = `https://gitee.com/api/v5/orgs/${organization}/repos?page=${page}&per_page=${perPage}&sort=updated&direction=desc`;
     } else {
       apiUrl = `https://gitee.com/api/v5/users/${giteeUsername}/repos?page=${page}&per_page=${perPage}&sort=updated&direction=desc`;
     }
-    
+
     if (config.token) {
       apiUrl += `&access_token=${config.token}`;
     }
-    
+
     const response = await fetch(apiUrl);
-    
+
     if (!response.ok) {
       throw new Error(`Gitee API 请求失败: ${response.statusText}`);
     }
-    
+
     const data = await response.json() as any[];
-    
+
     const projects: GitProject[] = data.map(repo => ({
       name: repo.name || '',
       description: repo.description || '',
@@ -326,10 +325,10 @@ async function fetchGiteeProjects(username: string, organization: string, page: 
       avatarUrl: repo.owner?.avatar_url || '',
       platform: GitPlatform.GITEE
     }));
-    
+
     const totalCount = parseInt(response.headers.get('total_count') || '0');
     const totalPages = Math.ceil(totalCount / perPage) || 1;
-    
+
     return {
       projects,
       pagination: {

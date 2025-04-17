@@ -1,0 +1,203 @@
+---
+title: "Linux系统性能监控与调优：使用Prometheus和Grafana实现可视化"
+date: 2025-04-17
+summary: "详细介绍如何使用Prometheus和Grafana搭建Linux系统性能监控平台，包括指标采集、告警配置和性能调优建议。适合运维工程师和系统管理员阅读。"
+tags: 
+  - Linux
+  - Prometheus
+  - Grafana
+  - 监控
+  - 性能优化
+difficulty: "intermediate"
+technologies: 
+  - Ubuntu 22.04
+  - Prometheus 2.45
+  - Grafana 10.2
+  - Node Exporter
+prerequisites:
+  - Linux系统基础
+  - Docker基础知识
+  - 基本的性能指标理解
+image: "/images/prometheus-grafana.png"
+---
+
+## 技术背景
+
+在现代运维环境中，系统性能监控对于保障服务稳定性至关重要。Prometheus和Grafana的组合已经成为了Linux系统监控的标准解决方案。本文将详细介绍如何搭建一个完整的监控系统，实现性能指标的采集、可视化和告警。
+
+## 环境要求
+
+- 操作系统：Ubuntu 22.04 LTS
+- 内存：最少4GB
+- CPU：2核心以上
+- 磁盘：20GB可用空间
+- Docker及Docker Compose
+
+### 工具版本
+
+```bash
+# 检查Docker版本
+docker --version
+Docker version 24.0.7
+
+# 检查Docker Compose版本
+docker compose version
+Docker Compose version v2.21.0
+```
+
+## 实现步骤
+
+### 1. 安装Node Exporter
+
+首先部署Node Exporter来采集Linux系统指标：
+
+```bash
+# 拉取Node Exporter镜像
+docker pull prom/node-exporter:latest
+
+# 启动Node Exporter容器
+docker run -d \
+  --name node-exporter \
+  --net="host" \
+  --pid="host" \
+  -v "/:/host:ro,rslave" \
+  prom/node-exporter:latest \
+  --path.rootfs=/host
+```
+
+### 2. 部署Prometheus
+
+创建Prometheus配置文件：
+
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+```
+
+启动Prometheus容器：
+
+```bash
+docker run -d \
+  --name prometheus \
+  -p 9090:9090 \
+  -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml \
+  prom/prometheus:latest
+```
+
+### 3. 配置Grafana
+
+部署Grafana：
+
+```bash
+docker run -d \
+  --name grafana \
+  -p 3000:3000 \
+  grafana/grafana:latest
+```
+
+### 4. 配置监控面板
+
+1. 访问Grafana（http://localhost:3000）
+2. 添加Prometheus数据源
+3. 导入Node Exporter Dashboard (ID: 1860)
+
+### 5. 告警配置
+
+创建Prometheus告警规则：
+
+```yaml
+groups:
+- name: node_alerts
+  rules:
+  - alert: HighCPUUsage
+    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: High CPU usage detected
+      description: CPU usage is above 80% for 5 minutes
+```
+
+## 关键指标监控
+
+### 1. CPU使用率
+
+```promql
+100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+```
+
+### 2. 内存使用率
+
+```promql
+100 * (1 - ((node_memory_MemFree_bytes + node_memory_Cached_bytes + node_memory_Buffers_bytes) / node_memory_MemTotal_bytes))
+```
+
+### 3. 磁盘使用率
+
+```promql
+100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"})
+```
+
+## 性能调优建议
+
+1. **CPU优化**
+   - 使用`nice`调整进程优先级
+   - 配置CPU频率调节器
+   - 优化进程亲和性
+
+2. **内存优化**
+   - 调整swap使用策略
+   - 优化文件系统缓存
+   - 监控内存泄漏
+
+3. **磁盘IO优化**
+   - 使用`ionice`设置IO优先级
+   - 优化文件系统参数
+   - 配置磁盘调度算法
+
+## 常见问题
+
+### 问题1：数据采集延迟
+
+**症状**：Prometheus数据采集出现延迟
+
+**解决方案**：
+```bash
+# 调整scrape_interval
+sed -i 's/scrape_interval: 15s/scrape_interval: 5s/' prometheus.yml
+docker restart prometheus
+```
+
+### 问题2：Grafana面板加载慢
+
+**原因分析与解决**：
+1. 检查时间范围设置
+2. 优化查询表达式
+3. 配置数据源缓存
+
+## 安全建议
+
+1. 启用认证
+2. 配置TLS加密
+3. 限制网络访问
+4. 定期更新组件版本
+
+## 扩展阅读
+
+- [Prometheus官方文档](https://prometheus.io/docs/introduction/overview/)
+- [Grafana最佳实践](https://grafana.com/docs/grafana/latest/best-practices/)
+- [Node Exporter指标说明](https://prometheus.io/docs/guides/node-exporter/)
+
+## 相关文章
+
+- [Docker容器监控实践](相关链接)
+- [Linux性能优化指南](相关链接)
+- [告警规则配置最佳实践](相关链接)

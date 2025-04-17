@@ -1,0 +1,147 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/components/Layout.astro';
+
+export async function getStaticPaths() {
+  const categories = {
+    windows: {
+      title: "Windows 技术文档",
+      description: "Windows系统管理、PowerShell脚本、系统优化等技术教程",
+      tags: ["Windows", "PowerShell", "批处理", "系统优化"]
+    },
+    linux: {
+      title: "Linux 技术文档",
+      description: "Linux系统管理、Shell脚本、服务器配置等技术教程",
+      tags: ["Linux", "Ubuntu", "CentOS", "Bash", "Shell"]
+    },
+    python: {
+      title: "Python 开发教程",
+      description: "Python编程、Web开发、自动化脚本等技术教程",
+      tags: ["Python", "Django", "Flask", "爬虫", "自动化"]
+    },
+    devops: {
+      title: "DevOps 实践指南",
+      description: "自动化运维、容器化、CI/CD、监控等技术教程",
+      tags: ["DevOps", "Docker", "Kubernetes", "CI/CD", "监控"]
+  },
+  database: { // 添加 database 分类
+    title: "数据库技术",
+    description: "数据库管理、SQL、NoSQL、性能优化等相关技术",
+    tags: ["Database", "SQL", "MySQL", "PostgreSQL", "NoSQL", "Redis"]
+  }
+};
+
+  return Object.entries(categories).map(([category, info]) => ({
+    params: { category },
+    props: { ...info }
+  }));
+}
+
+const { category } = Astro.params;
+const { title, description, tags } = Astro.props;
+
+// 获取分类文章 - 使用正确的 collection 'tech'
+const articles = await getCollection('tech');
+const categoryArticles = articles
+  .filter(article => {
+    // 检查 slug 是否以当前分类开头
+    const isInCategory = article.slug.startsWith(`${category}/`);
+    // 确保文章不是草稿
+    const isNotDraft = !article.data.draft;
+    return isInCategory && isNotDraft;
+  })
+  // 按日期降序排序，确保日期有效
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// 构建面包屑数据
+const breadcrumbs = [
+  { title: "文章", href: "/articles" },
+  { title: title, href: `/articles/category/${category}` }
+];
+
+// 准备Schema.org数据
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": title,
+  "description": description,
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": breadcrumbs.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.title,
+      "item": new URL(item.href, Astro.site).toString()
+    }))
+  }
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  category={category}
+>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- 技术分类简介 -->
+    <header class="mb-12">
+      <h1 class="text-3xl font-bold mb-4">{title}</h1>
+      <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
+        {description}
+      </p>
+      <div class="flex flex-wrap gap-2">
+        {/* 添加检查，确保 tags 是一个数组再进行 map */}
+        {Array.isArray(tags) && tags.map(tag => (
+          <a
+            href={`/articles/tag/${tag.toLowerCase()}`} {/* 建议将 tag 转为小写，以保持 URL 一致性 */}
+            class="px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm hover:bg-primary-100 dark:hover:bg-primary-800/30 transition-colors"
+          >
+            {tag}
+          </a>
+        ))}
+      </div>
+    </header>
+
+    <!-- 文章列表 -->
+    {categoryArticles.length > 0 ? (
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {categoryArticles.map(article => (
+          <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+            <a
+              href={`/articles/${article.id}`}
+              class="block p-6 h-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <h2 class="text-xl font-bold mb-3 line-clamp-2">
+                {article.data.title}
+              </h2>
+              <time class="text-sm text-gray-500 mb-3 block">
+                {article.data.date.toLocaleDateString('zh-CN')}
+              </time>
+              {article.data.summary && (
+                <p class="text-gray-600 dark:text-gray-400 line-clamp-3 mb-4">
+                  {article.data.summary}
+                </p>
+              )}
+              <div class="flex flex-wrap gap-2 mt-auto">
+                {article.data.tags?.map(tag => (
+                  <span class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+        <p class="text-gray-600 dark:text-gray-400">
+          暂无相关技术文章
+        </p>
+      </div>
+    )}
+
+    <!-- Schema.org 数据 -->
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  </div>
+</Layout>

@@ -1,0 +1,182 @@
+---
+title: "Linux系统性能优化：内存和CPU管理最佳实践"
+date: 2024-04-17
+summary: "深入探讨Linux系统性能优化技术，包括内存管理、CPU调度和系统监控。适合系统管理员和DevOps工程师阅读的实战指南。"
+tags: 
+  - Linux
+  - 性能优化
+  - 系统管理
+  - 内存管理
+  - CPU调优
+difficulty: "intermediate"
+technologies: 
+  - Ubuntu 22.04
+  - CentOS 8
+  - systemd
+  - sysstat
+  - cgroups
+prerequisites:
+  - Linux基础命令
+  - 系统管理经验
+  - 性能监控基础
+image: "/images/linux-performance.png"
+---
+
+## 技术背景
+
+在现代企业环境中，Linux系统性能优化对于维持服务稳定性和提高资源利用率至关重要。本文将重点介绍内存和CPU资源管理的最佳实践，帮助系统管理员实现更好的性能表现。
+
+## 环境要求
+
+- 操作系统：Ubuntu 22.04 LTS 或 CentOS 8
+- 工具包：sysstat, htop, vmstat
+- 权限要求：root或sudo权限
+- 建议内存：4GB以上
+- CPU：2核心以上
+
+### 工具安装
+```bash
+# Ubuntu系统
+sudo apt update
+sudo apt install sysstat htop
+
+# CentOS系统
+sudo dnf install sysstat htop
+```
+
+## 实现步骤
+
+### 1. 系统性能基线采集
+
+首先需要采集系统的基础性能数据作为优化参考：
+
+```bash
+# CPU使用率监控
+vmstat 1 5
+```
+
+预期输出：
+```
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+ 1  0      0 1882748 238748 2521200    0    0     0     1    1    2  1  1 98  0
+```
+
+### 2. 内存管理优化
+
+#### 2.1 配置swap使用策略
+
+编辑/etc/sysctl.conf文件：
+
+```bash
+# 降低swap使用倾向
+sudo sysctl -w vm.swappiness=10
+
+# 调整缓存压缩
+sudo sysctl -w vm.vfs_cache_pressure=50
+```
+
+#### 2.2 配置透明大页面
+
+```bash
+# 禁用透明大页面
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+```
+
+### 3. CPU调度优化
+
+#### 3.1 进程优先级管理
+
+```bash
+# 使用nice调整进程优先级
+nice -n 10 ./your-process
+
+# 使用cgroups限制CPU使用
+sudo systemctl set-property your-service.service CPUQuota=80%
+```
+
+#### 3.2 CPU频率调节
+
+```bash
+# 安装CPU频率调节工具
+sudo apt install cpufrequtils
+
+# 设置性能模式
+sudo cpufreq-set -g performance
+```
+
+## 性能监控
+
+### 1. 使用sar监控系统性能
+
+```bash
+# 每5秒采集一次数据
+sar -u 5 5
+```
+
+### 2. 内存使用监控
+
+```bash
+# 使用free查看内存使用情况
+free -m
+
+# 使用vmstat监控内存
+vmstat 5
+```
+
+## 常见问题
+
+### 问题1：系统负载过高
+
+症状：负载平均值持续超过CPU核心数
+
+解决方案：
+```bash
+# 找出CPU使用率最高的进程
+top -c
+
+# 分析进程详细信息
+pidstat -p <PID> 1
+```
+
+### 问题2：内存泄漏
+
+症状：free内存持续减少
+
+解决方案：
+```bash
+# 使用smem分析内存使用
+sudo apt install smem
+smem -t -k -c "pid user command swap uss pss rss"
+```
+
+## 性能基准测试
+
+使用stress-ng进行基准测试：
+
+```bash
+# 安装stress-ng
+sudo apt install stress-ng
+
+# CPU压力测试
+stress-ng --cpu 4 --timeout 60s --metrics
+```
+
+## 安全注意事项
+
+1. 在修改系统参数前务必备份配置
+2. 生产环境修改需要在维护窗口进行
+3. 保持系统日志监控，及时发现异常
+4. 建立性能监控基线和告警阈值
+
+## 扩展阅读
+
+- [Linux性能优化实战](https://www.brendangregg.com/linuxperf.html)
+- [RED方法：性能监控最佳实践](https://www.weave.works/blog/the-red-method-key-metrics-for-microservices-architecture/)
+- [SystemTap进阶使用指南](https://sourceware.org/systemtap/documentation.html)
+
+## 相关文章
+
+- [Linux进程管理和调度详解](相关文章链接)
+- [使用Prometheus监控Linux性能](相关文章链接)
+- [容器环境下的资源限制](相关文章链接)

@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from "astro/config";
-
 import tailwindcss from "@tailwindcss/vite";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
@@ -10,8 +9,7 @@ import sitemap from "@astrojs/sitemap";
 import fs from "node:fs";
 import path from "node:path";
 import { SITE_URL } from "./src/consts";
-
-import vercel from "@astrojs/vercel";
+import node from "@astrojs/node";
 
 function getArticleDate(articleId) {
   try {
@@ -37,7 +35,13 @@ function getArticleDate(articleId) {
 // https://astro.build/config
 export default defineConfig({
   site: SITE_URL,
-  output: "static",
+  output: "server",
+  adapter: node({
+    mode: "standalone"
+  }),
+  experimental: {
+    session: true
+  },
   trailingSlash: "ignore",
 
   build: {
@@ -51,8 +55,6 @@ export default defineConfig({
         output: {
           // 手动分块配置
           manualChunks: {
-            // 将地图组件单独打包
-            "world-heatmap": ["./src/components/WorldHeatmap.tsx"],
             // 将 React 相关库单独打包
             "react-vendor": ["react", "react-dom"],
             // 其他大型依赖也可以单独打包
@@ -129,29 +131,6 @@ export default defineConfig({
     }),
   ],
 
-  // Markdown 配置
-  markdown: {
-    syntaxHighlight: 'prism',
-    remarkPlugins: [
-      [remarkEmoji, { emoticon: true, padded: true }]
-    ],
-    rehypePlugins: [
-      [rehypeExternalLinks, { target: '_blank', rel: ['nofollow', 'noopener', 'noreferrer'] }]
-    ],
-    gfm: true,
-    // 设置 remark-rehype 选项，以控制HTML处理
-    remarkRehype: { 
-      // 保留原始HTML格式，但仅在非代码块区域
-      allowDangerousHtml: true,
-      // 确保代码块内容不被解析
-      passThrough: ['code']
-    },
-    shikiConfig: {
-      theme: "github-dark",
-      langs: [],
-      wrap: true,
-    },
-  },
+  // 移除全局 Markdown 配置，让 MDX 集成独立处理
 
-  adapter: vercel(),
 });

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactMasonryCss from 'react-masonry-css';
 
 // Git 平台类型枚举
 export enum GitPlatform {
@@ -204,12 +203,6 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
     return colors[language] || 'bg-gray-400';
   };
 
-  const breakpointColumnsObj = {
-    default: 3,
-    1100: 2,
-    700: 1
-  };
-
   const getPlatformName = (platform: GitPlatform) => {
     return GIT_PLATFORM_CONFIG.platformNames[platform];
   };
@@ -236,11 +229,7 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
             "没有找到项目数据。"}
         </div>
       ) : (
-        <ReactMasonryCss
-          breakpointCols={breakpointColumnsObj}
-          className="flex -ml-4 w-auto"
-          columnClassName="pl-4 bg-clip-padding"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project, index) => (
             <div key={`${project.platform}-${project.owner}-${project.name}-${index}`} className="mb-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
               <a href={project.url} target="_blank" rel="noopener noreferrer" className="block p-5">
@@ -307,7 +296,7 @@ const GitProjectCollection: React.FC<GitProjectCollectionProps> = ({
               </a>
             </div>
           ))}
-        </ReactMasonryCss>
+        </div>
       )}
       
       {pagination.total > 1 && (

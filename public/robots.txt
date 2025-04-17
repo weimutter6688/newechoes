@@ -1,0 +1,35 @@
+# 允许所有搜索引擎爬取
+User-agent: *
+Allow: /
+
+# 不允许爬取的目录
+Disallow: /draft/      # 草稿文章
+Disallow: /_astro/    # Astro内部文件
+Disallow: /api/       # API端点
+
+# 允许爬取技术文档
+Allow: /articles/
+Allow: /*.md$
+Allow: /*.mdx$
+Allow: /*.js$         # 允许爬取代码示例
+Allow: /*.py$
+Allow: /*.sh$
+
+# 指定网站地图
+Sitemap: https://xinjp.com/sitemap.xml
+
+# 爬虫规则
+Crawl-delay: 10       # 爬虫间隔时间（秒）
+
+# 技术SEO优化
+# 允许爬取代码块
+Allow: /articles/**/*.md
+Allow: /articles/**/*.mdx
+
+# 允许爬取技术分类页面
+Allow: /articles/category/
+Allow: /articles/tag/
+
+# 允许爬取静态资源
+Allow: /images/
+Allow: /assets/

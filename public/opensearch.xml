@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>技术博客搜索</ShortName>
+  <Description>搜索Windows、Linux、Python和自动化运维相关的技术文章</Description>
+  <Tags>技术 教程 运维 编程</Tags>
+  <Contact>admin@yourdomain.com</Contact>
+  <Url type="text/html" 
+       template="https://yourdomain.com/articles?q={searchTerms}"/>
+  <LongName>技术博客 - 技术教程和最佳实践搜索</LongName>
+  <Image height="16" width="16" type="image/x-icon">
+    https://yourdomain.com/favicon.ico
+  </Image>
+  <Query role="example" searchTerms="Linux性能优化"/>
+  <Developer>Your Name</Developer>
+  <Attribution>
+    搜索结果由技术博客提供
+  </Attribution>
+  <SyndicationRight>open</SyndicationRight>
+  <AdultContent>false</AdultContent>
+  <Language>zh-CN</Language>
+  <OutputEncoding>UTF-8</OutputEncoding>
+  <InputEncoding>UTF-8</InputEncoding>
+</OpenSearchDescription>
