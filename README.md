@@ -330,6 +330,6 @@ pm2 stop my-astro-app
 pm2 delete my-astro-app
 ```
 
-## SEO 优化指南
-(此部分无更改，省略以保持简洁)
-... (保持原有 SEO 内容) ...
+---
+
+详细的 SEO 优化指南请参见 [SEO_GUIDE.md](SEO_GUIDE.md)。
